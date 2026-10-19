@@ -153,8 +153,12 @@ function Carousel({ views, live, tier }: { views: SceneView[]; live: boolean; ti
       const pick = frame.current % 2 === 0 || others.length === 0 ? front : others[(frame.current >> 1) % others.length]!;
       const m = list[pick];
       if (m) {
+        // Thumbnails are opaque: clear with alpha 1 (the hero canvas itself is transparent, and
+        // a transparent clear would let the emerald page show through the scene).
+        state.gl.setClearAlpha(1);
         state.gl.setRenderTarget(m.target);
         state.gl.render(m.scene, m.camera);
+        state.gl.setClearAlpha(0);
       }
     }
     state.gl.setRenderTarget(null);
