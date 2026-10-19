@@ -1,0 +1,4 @@
+/*
+ * Content-page styling for sacred-garden. Everything here is scoped under [data-template='sacred-garden'] (the
+ * content root carries the attribute), so it never reaches another template.
+ */

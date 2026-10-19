@@ -1,0 +1,4 @@
+/*
+ * Content-page styling for blossom-oud. Everything here is scoped under [data-template='blossom-oud'] (the
+ * content root carries the attribute), so it never reaches another template.
+ */

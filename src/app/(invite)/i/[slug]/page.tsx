@@ -1,19 +1,20 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { InviteContent } from '@/lib/invite/content/InviteContent';
+import { InviteShell } from '@/lib/invite/shell/InviteShell';
 import { buildInviteView } from '@/lib/invite/view';
 import { isAdmin } from '@/lib/session';
 import { SLUG_RE, TOKEN_RE } from '@/lib/validation/patterns';
 import { getPublicWedding } from '@/lib/wedding-cache';
 import { loadInviteGuest } from '@/lib/weddings';
 import { formatWeddingDate } from '@/lib/date/format';
-import { siteUrl } from '@/lib/env';
+import { labEnabled, siteUrl } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ g?: string | string[] }>;
+  searchParams: Promise<{ g?: string | string[]; lab?: string | string[] }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function InvitePage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { g } = await searchParams;
+  const { g, lab } = await searchParams;
   if (!SLUG_RE.test(slug)) notFound();
 
   const wedding = await getPublicWedding(slug);
@@ -46,5 +47,10 @@ export default async function InvitePage({ params, searchParams }: Props) {
   // A token from another wedding (or a typo) quietly falls back to the generic greeting.
   const guest = token ? await loadInviteGuest(wedding.slug, token) : null;
 
-  return <InviteContent view={buildInviteView(wedding, guest)} />;
+  const view = buildInviteView(wedding, guest);
+  return (
+    <InviteShell view={view} lab={lab === '1' && labEnabled()}>
+      <InviteContent view={view} stage />
+    </InviteShell>
+  );
 }

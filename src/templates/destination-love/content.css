@@ -1,0 +1,4 @@
+/*
+ * Content-page styling for destination-love. Everything here is scoped under [data-template='destination-love'] (the
+ * content root carries the attribute), so it never reaches another template.
+ */

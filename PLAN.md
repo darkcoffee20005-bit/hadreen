@@ -10,9 +10,8 @@
 
 - [x] **Phase 0**: study the inspiration and the reference, then write PLAN.md
 - [x] **Phase 1**: backend and platform (data model, routes, couple dashboard, admin, seed, tests)
-- [ ] **Phase 2**: shared invitation engine (`src/lib/invite`) plus an engine test stage
-- [ ] **Phase 3a**: pilot template الحديقة المقدّسة, then stop for your review *(proposed checkpoint)*
-- [ ] **Phase 3b**: the other five templates
+- [x] **Phase 2**: shared invitation engine (`src/lib/invite`) plus an engine test stage
+- [ ] **Phase 3**: the six templates *(you asked me to carry on through every phase, so the 3a review checkpoint is folded in: all six are built together)*
 - [ ] **Phase 4**: marketing website (`/`), preview videos, SEO
 - [ ] **Phase 5**: polish, QA and docs
 
@@ -1420,3 +1419,33 @@ Screenshots (§0).
 - One production build failed once while downloading Google Fonts and passed on retry. If it recurs, switch to self-hosted font files.
 - Full nonce-based CSP is deferred to Phase 5.
 
+
+### Phase 2: shared invitation engine (done)
+
+**Delivered**
+- **State machine** (`machine.ts`, zustand): boot → loading → gate → opening → hand-off → content, path 3D/2D (drops to 2D at any phase on chunk failure, timeout or lost WebGL context), tier with live step-down, weighted real loading milestones, capture moments, RSVP announcements, lab actions (pin tier, scrub, replay).
+- **Capability check** (`capability.ts`): `?force2d=1`, `?tier=` (QA), reduced motion with an opt-in to 3D, WebGL probe, software rasterisers (SwiftShader/llvmpipe) → 2D, detect-gpu with self-hosted benchmarks and a 2.5 s timeout, Save-Data → low.
+- **Stage** (`stage/`): one canvas, frames driven by our own loop (full rate in gate/opening and while interacting, idle cap while reading, nothing when hidden), per-tier DPR/MSAA/SMAA/shadows, `Grade` (bloom, neutral tone mapping, baked LUT grade, vignette, grain), `CinematicCamera` (camera tracks with aspect-aware framing, ambient shot following scroll, tilt parallax), `useIntro` (one GSAP timeline the shell plays, skips and seeks), readiness milestones and shader warm-up, particle burst.
+- **Kit**: sky dome, envelope (embossed border, fold lines, gold-edged flap, liner), wax seal (cracks in two, gilded monogram relief), gold arch, light rays, gold 3D text (`GoldText`), procedural textures (normal maps from height, monograms, gobos), sRGB colour mixing.
+- **Audio**: synthesized foley and placeholder music per template (Karplus–Strong, quarter-tone Rast), WebAudio graph with reverb, unlock on the opening tap, mute remembered, silence when hidden; licensed tracks plug in via `public/music/manifest.json`.
+- **Interaction kit**: springs, haptics, pointer/gyro tilt (iOS permission button), hold gesture, scratch surface with coverage — all keyboard-operable.
+- **Shell**: server-rendered gate (names and date always readable), real progress ring, tap/hold/scratch gestures, skip, Esc, focus to the hero after hand-off, content inert behind the gate, `<noscript>` shows the content.
+- **Content page** over the living backdrop: panels, flip countdown, programme line that draws on scroll, tilt venue card, dress swatches, RSVP with spring segmented control, wax stamp, particle burst and haptics.
+- **Lab**: `/lab` and `/lab/<template>` (dev or `LAB_ENABLED=true`): Leva panel (tier, phase buttons, opening scrubber, scene tweaks via `useTweak`), r3f-perf. Not in guests' bundles.
+- **Tooling**: capture mode (`?capture=gate|mid|content`) for screenshots and videos, `pnpm budget` (bytes before intro for 3D and 2D, draw calls/triangles), `scripts/peek.mjs`, production builds in their own folder (`NEXT_DIST_DIR`) so the dev server can keep running.
+- **Phase 3 extension points**: per template `Scene.tsx`, `Fallback2D.tsx` (2D gate + backdrop + opening length), `content.css` (scoped), `Extras.tsx` (decorative slot after the hero), `gate.header` option.
+- Tests: 104 Vitest (unit + integration), 13 Playwright (2D path, 3D path on SwiftShader, skip/Esc, reduced motion, keyboard hold/scratch, RSVP flows, dashboard, admin).
+
+**Changes to this plan**
+- **3D text: canvas, not troika.** The spike (`screenshots/phase-2/spike-troika-vs-canvas-text-1200x900.png`) showed troika-three-text mis-joining Aref Ruqaa and Amiri even with full TTFs. `GoldText` shapes with the browser's own text engine onto a canvas texture (gold PBR plane with alpha). troika is removed.
+- **Tone mapping: Neutral (Khronos PBR Neutral), not AgX.** AgX desaturated the brand emerald and gold; Neutral keeps them true.
+- **Bloom**: mipmap blur with fewer levels on medium; postprocessing's deprecated `resolutionScale` corrupted the image at half size and is never passed.
+- **Colour mixing in sRGB** (`stage/color.ts`): three's `Color.lerp` mixes in linear light, which turned "10 % gold over emerald" into olive.
+- **Gobo floor**: projected light patterns keep ≥ 60 % light in their dark parts; at 0 the wax seal sat in a black hole.
+- **Music stays off the loading path**: foley is synthesized before the gate; music renders in the background and starts when ready.
+- **Convolver reverb** gets its impulse resampled to the context's rate (browsers reject a mismatched buffer); the opening never waits on audio.
+- **Playwright 1.56.1** (matches the sandbox's Chromium build).
+
+**Known gaps (later phases)**
+- Every template still plays the engine test stage; bespoke scenes and 2D fallbacks arrive in Phase 3.
+- Placeholder music is synthesized; licensed tracks are a drop-in (`public/music/manifest.json`) once you choose them.

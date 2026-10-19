@@ -25,6 +25,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
+    // Its own build folder, so a dev server on .next can keep running alongside.
     command: `pnpm build && pnpm start --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: true,
@@ -32,6 +33,7 @@ export default defineConfig({
     env: {
       DATABASE_URL: process.env.E2E_DATABASE_URL ?? '',
       SITE_URL: baseURL,
+      NEXT_DIST_DIR: '.next-e2e',
     },
   },
 });

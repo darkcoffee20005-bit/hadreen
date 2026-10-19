@@ -1,0 +1,7 @@
+/* Per-template content styling (each file is scoped under its [data-template]). */
+@import './sacred-garden/content.css';
+@import './blossom-oud/content.css';
+@import './dolce-vita/content.css';
+@import './royal-gold/content.css';
+@import './eternal-romance/content.css';
+@import './destination-love/content.css';

@@ -1,17 +1,25 @@
 import type { InviteDict } from './ar';
 
-type Widen<T> = T extends (...args: infer A) => infer R
-  ? (...args: A) => R
-  : T extends string
-    ? string
-    : { [K in keyof T]: Widen<T[K]> };
-
-export const en: Widen<InviteDict> = {
+export const en: InviteDict = {
   greetingGuest: (name: string) => `Welcome, ${name}`,
   greetingGeneric: 'Welcome',
   invitationLead: 'We are delighted to invite you to the wedding of',
   and: '&',
   openInvitation: 'Open the invitation',
+  shell: {
+    preparing: 'Preparing your invitation…',
+    skip: 'Skip animation',
+    mute: 'Mute',
+    unmute: 'Sound on',
+    gyro: 'Tilt your phone',
+    play3d: 'Play the 3D version',
+    weddingOf: 'The wedding of',
+    scratchDay: 'day',
+    scratchMonth: 'month',
+    scratchYear: 'year',
+    scratchTile: (part: string) => `Scratch to reveal the ${part}`,
+    holdHint: 'Keep holding…',
+  },
   skipToContent: 'Skip to the invitation details',
   demoRibbon: 'Demo invitation: names, dates and places are examples',
   draftRibbon: 'Draft: this invitation is not published yet',

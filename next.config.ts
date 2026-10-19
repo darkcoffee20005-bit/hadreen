@@ -2,6 +2,8 @@ import type { NextConfig } from 'next';
 
 // Later rules win when two rules set the same header, so specific routes come last.
 const nextConfig: NextConfig = {
+  // Lets a production build (e2e, screenshots, budget) live beside the dev server's .next.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   reactStrictMode: true,
   poweredByHeader: false,
   // The app has two root layouts ((site) and (invite)), so unmatched URLs need a global 404.

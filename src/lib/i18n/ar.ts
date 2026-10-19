@@ -1,10 +1,24 @@
 /** Arabic strings for the invitation pages. Iraqi-friendly, warm and short. */
-export const ar = {
+const strings = {
   greetingGuest: (name: string) => `أهلاً ${name}`,
   greetingGeneric: 'أهلاً وسهلاً',
   invitationLead: 'يسعدنا دعوتكم لحفل زفاف',
   and: 'و',
   openInvitation: 'افتحوا الدعوة',
+  shell: {
+    preparing: 'جاري تجهيز الدعوة…',
+    skip: 'تخطّي الحركة',
+    mute: 'كتم الصوت',
+    unmute: 'تشغيل الصوت',
+    gyro: 'حرّكوا تلفونكم',
+    play3d: 'شغّلوا النسخة ثلاثية الأبعاد',
+    weddingOf: 'دعوة زفاف',
+    scratchDay: 'اليوم',
+    scratchMonth: 'الشهر',
+    scratchYear: 'السنة',
+    scratchTile: (part: string) => `امسحوا لكشف ${part}`,
+    holdHint: 'استمروا بالضغط…',
+  },
   skipToContent: 'انتقلوا إلى تفاصيل الدعوة',
   demoRibbon: 'دعوة تجريبية: الأسماء والتواريخ والأماكن أمثلة',
   draftRibbon: 'مسودة: هذي الدعوة ما منشورة بعد',
@@ -70,4 +84,13 @@ export const ar = {
   },
 } as const;
 
-export type InviteDict = typeof ar;
+type Widen<T> = T extends (...args: infer A) => infer R
+  ? (...args: A) => R
+  : T extends string
+    ? string
+    : { [K in keyof T]: Widen<T[K]> };
+
+/** The shape every language provides (Arabic is the reference). */
+export type InviteDict = Widen<typeof strings>;
+
+export const ar: InviteDict = strings;

@@ -1,0 +1,4 @@
+/*
+ * Content-page styling for royal-gold. Everything here is scoped under [data-template='royal-gold'] (the
+ * content root carries the attribute), so it never reaches another template.
+ */

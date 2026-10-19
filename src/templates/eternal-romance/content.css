@@ -1,0 +1,4 @@
+/*
+ * Content-page styling for eternal-romance. Everything here is scoped under [data-template='eternal-romance'] (the
+ * content root carries the attribute), so it never reaches another template.
+ */

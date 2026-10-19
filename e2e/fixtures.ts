@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { expect, type Page } from '@playwright/test';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { customAlphabet } from 'nanoid';
 import { PrismaClient } from '../src/generated/prisma/client';
@@ -45,4 +46,13 @@ export async function createWeddingWithGuest(overrides: { openRsvpMaxSeats?: num
     },
   });
   return { wedding, guest };
+}
+
+/**
+ * Opens the gate the way a guest does. Default e2e Chromium has no WebGL, so this is the 2D
+ * gate: tap the seal, the short CSS opening plays, the content takes over.
+ */
+export async function openInvitation(page: Page) {
+  await page.getByRole('button', { name: 'افتحوا الدعوة' }).click();
+  await expect(page.locator('[data-phase="content"]')).toBeVisible({ timeout: 15_000 });
 }

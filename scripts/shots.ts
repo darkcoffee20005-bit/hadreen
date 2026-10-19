@@ -6,6 +6,10 @@
  *
  * Needs the app running with seeded demo weddings. Reads tokens/secrets from the database so it
  * can open a personal invitation and a couple dashboard.
+ *
+ * Sets (SHOTS_SETS, comma-separated, default all): pages, moments, og.
+ *   moments = every template's gate / mid-opening / content, 3D (medium tier) and 2D paths,
+ *   driven by capture mode (?capture=…) so frames are deterministic. SHOTS_TEMPLATES narrows it.
  */
 import 'dotenv/config';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -19,6 +23,14 @@ const phase = process.argv[2] ?? 'scratch';
 const base = process.env.SHOTS_BASE_URL ?? 'http://localhost:3100';
 const dbUrl = process.env.SHOTS_DATABASE_URL ?? process.env.E2E_DATABASE_URL!;
 const out = join(process.cwd(), 'screenshots', phase);
+const sets = new Set((process.env.SHOTS_SETS ?? 'pages,moments,og').split(','));
+const templates = (process.env.SHOTS_TEMPLATES?.split(',') ?? [...TEMPLATE_IDS]).filter((id) =>
+  (TEMPLATE_IDS as readonly string[]).includes(id),
+);
+const MOMENTS = ['gate', 'mid', 'content'] as const;
+// Headless Chromium renders WebGL with SwiftShader; detect-gpu would rightly send it to 2D,
+// so 3D shots pin the tier with ?tier=medium.
+const GL_ARGS = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'];
 const sizes = [
   { width: 390, height: 844, mobile: true },
   { width: 1440, height: 900, mobile: false },
@@ -44,8 +56,8 @@ async function main() {
     { name: 'admin-editor', path: `/admin/weddings/${demo.id}`, admin: true },
   ];
 
-  const browser = await chromium.launch();
-  for (const size of sizes) {
+  const browser = await chromium.launch({ args: GL_ARGS });
+  for (const size of sets.has('pages') ? sizes : []) {
     const context = await browser.newContext({
       viewport: { width: size.width, height: size.height },
       deviceScaleFactor: 1,
@@ -71,10 +83,39 @@ async function main() {
     }
     await context.close();
   }
+
+  if (sets.has('moments')) {
+    for (const size of sizes) {
+      const context = await browser.newContext({
+        viewport: { width: size.width, height: size.height },
+        deviceScaleFactor: 1,
+        isMobile: size.mobile,
+        hasTouch: size.mobile,
+        locale: 'ar-IQ',
+        timezoneId: 'Asia/Baghdad',
+        userAgent: 'HadreenScreenshots/1.0 (headless)',
+      });
+      const page = await context.newPage();
+      for (const id of templates) {
+        for (const path of ['3d', '2d'] as const) {
+          for (const moment of MOMENTS) {
+            const query = `capture=${moment}&${path === '3d' ? 'tier=medium' : 'force2d=1'}`;
+            await page.goto(`${base}/i/demo-${id}?${query}`, { waitUntil: 'load' });
+            await page.waitForFunction(() => window.__hadreen?.ready === true, null, { timeout: 120_000 });
+            await page.waitForTimeout(400);
+            const file = join(out, `${id}-${path}-${moment}-${size.width}x${size.height}.png`);
+            await page.screenshot({ path: file });
+            console.log(file);
+          }
+        }
+      }
+      await context.close();
+    }
+  }
   await browser.close();
 
   // Share images (fixed 1200×630).
-  for (const id of TEMPLATE_IDS) {
+  for (const id of sets.has('og') ? TEMPLATE_IDS : []) {
     const html = await (await fetch(`${base}/i/demo-${id}`)).text();
     const src = /property="og:image" content="([^"]+)"/.exec(html)?.[1]?.replace(/&amp;/g, '&');
     if (!src) continue;

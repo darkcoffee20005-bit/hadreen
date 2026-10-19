@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createWeddingWithGuest, prisma } from './fixtures';
+import { createWeddingWithGuest, openInvitation, prisma } from './fixtures';
 
 test.afterAll(async () => {
   await prisma.$disconnect();
@@ -9,10 +9,11 @@ test('a guest opens their invite, RSVPs, and the couple sees it', async ({ page 
   const { wedding, guest } = await createWeddingWithGuest();
 
   await page.goto(`/i/${wedding.slug}?g=${guest.token}`);
-  await expect(page.getByText('أهلاً عائلة أبو حسين')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('أحمد');
+  const gate = page.locator('.invite-gate');
+  await expect(gate.getByText('أهلاً عائلة أبو حسين')).toBeVisible();
+  await expect(gate.getByRole('heading', { level: 1 })).toContainText('أحمد');
 
-  await page.getByRole('link', { name: 'افتحوا الدعوة' }).click();
+  await openInvitation(page);
   const rsvp = page.locator('#rsvp');
   await rsvp.getByRole('radio', { name: 'حاضرين' }).click();
   await rsvp.getByRole('button', { name: 'أقل' }).click(); // 4 → 3
@@ -24,6 +25,7 @@ test('a guest opens their invite, RSVPs, and the couple sees it', async ({ page 
 
   // Reloading shows the saved answer.
   await page.reload();
+  await openInvitation(page);
   await expect(page.locator('#rsvp').getByText('حاضرين (٢)')).toBeVisible();
 
   await page.goto(`/d/${wedding.slug}?k=${wedding.coupleSecret}`);
@@ -39,7 +41,8 @@ test('a guest without a personal link RSVPs with their name', async ({ page }) =
   const { wedding } = await createWeddingWithGuest({ openRsvpMaxSeats: 2 });
 
   await page.goto(`/i/${wedding.slug}`);
-  await expect(page.getByText('أهلاً وسهلاً')).toBeVisible();
+  await expect(page.locator('.invite-gate').getByText('أهلاً وسهلاً')).toBeVisible();
+  await openInvitation(page);
   const rsvp = page.locator('#rsvp');
   await rsvp.getByRole('radio', { name: 'حاضرين' }).click();
   await rsvp.getByLabel('الاسم').fill('بيت أبو علي');

@@ -64,7 +64,13 @@ export interface TemplateMeta {
   paletteVariants: PaletteVariant[];
   music: { moodAr: string; moodEn: string; bpm: number; placeholder: string };
   intro: { duration: number };
-  gate: { gesture: GateGesture; labelAr: string; labelEn: string };
+  gate: {
+    gesture: GateGesture;
+    labelAr: string;
+    labelEn: string;
+    /** What the gate overlay shows above the scene: names and date (default), names only, or nothing visible. */
+    header?: 'full' | 'names' | 'none';
+  };
   closingAr: string;
   closingEn: string;
   /** Share-card style: light uses bg/ink, dark uses band/onBand. */
