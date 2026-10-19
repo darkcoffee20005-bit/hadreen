@@ -1,0 +1,3 @@
+/** A small airliner seen from above, nose up, in a 100×100 box. */
+export const PLANE_GLYPH =
+  'M50 3C54 3 56 9 56 17V37L93 58V66L56 55V77L68 87V93L50 88L32 93V87L44 77V55L7 66V58L44 37V17C44 9 46 3 50 3Z';
