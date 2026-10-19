@@ -1,4 +1,161 @@
 /*
  * Content-page styling for eternal-romance. Everything here is scoped under [data-template='eternal-romance'] (the
  * content root carries the attribute), so it never reaches another template.
+ *
+ * The sections become full-width bands that alternate ivory and burgundy (the palette's bg and
+ * band, so the "night" variant follows), joined by soft wave edges with a gold hairline. On a
+ * burgundy band the ink tokens flip (ivory text, gold titles); ivory cards inside it (venue,
+ * RSVP, dress notes) reset them, so every text stays ≥ 4.5:1 on its own background.
+ * The hero, the closing line and the footer sit on the candlelit stage.
  */
+
+[data-template='eternal-romance'] {
+  --er-ink: var(--c-ink);
+  --er-ink-soft: var(--c-ink-soft);
+  --er-gold-ink: var(--c-gold-ink);
+  --er-bg: var(--c-bg);
+  --er-line: var(--c-line);
+  --er-band: var(--c-band);
+  --er-on-band: var(--c-on-band);
+  --er-wave: clamp(22px, 5vw, 46px);
+  --er-wave-fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 48' preserveAspectRatio='none'%3E%3Cpath d='M0 48V26C160 6 330 2 520 18s390 34 600 18c150-12 230-26 320-22V48Z' fill='%23000'/%3E%3C/svg%3E");
+  --er-wave-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 48' preserveAspectRatio='none'%3E%3Cpath d='M0 26C160 6 330 2 520 18s390 34 600 18c150-12 230-26 320-22' fill='none' stroke='%23000' stroke-width='1.4' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --er-wave-drop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 48' preserveAspectRatio='none'%3E%3Cpath d='M0 0V22C160 42 330 46 520 30s390-34 600-18c150 12 230 26 320 22V0Z' fill='%23000'/%3E%3C/svg%3E");
+  --er-wave-drop-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 48' preserveAspectRatio='none'%3E%3Cpath d='M0 22C160 42 330 46 520 30s390-34 600-18c150 12 230 26 320 22' fill='none' stroke='%23000' stroke-width='1.4' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+}
+
+/* ── The hero sits on the stage: a deeper pool of darkness behind the text, and a soft shadow. ── */
+[data-path] [data-template='eternal-romance'] > header > div[aria-hidden='true']:first-child {
+  background: radial-gradient(62% 46% at 50% 52%, rgb(22 4 9 / 0.78) 0%, rgb(22 4 9 / 0.5) 55%, transparent 100%);
+}
+[data-path] [data-template='eternal-romance'] > header :is(p, h1, a) {
+  text-shadow:
+    0 1px 2px rgb(22 4 9 / 0.9),
+    0 0 16px rgb(22 4 9 / 0.9);
+}
+[data-path] [data-template='eternal-romance'] > header a {
+  background: rgb(22 4 9 / 0.45);
+}
+
+/* ── Bands ── */
+[data-template='eternal-romance'] main {
+  padding-bottom: 0;
+}
+[data-template='eternal-romance'] main > section {
+  position: relative;
+  --er-fill: var(--er-bg);
+}
+[data-template='eternal-romance'] main > section:not(:last-child) {
+  padding: 2.75rem 1rem calc(2.25rem + var(--er-wave));
+  background:
+    repeating-linear-gradient(90deg, rgb(120 90 60 / 0.025) 0 1px, transparent 1px 4px),
+    var(--er-fill);
+}
+[data-template='eternal-romance'] main > section:not(:last-child):nth-child(even) {
+  --er-fill: var(--er-band);
+  --c-ink: var(--er-on-band);
+  --c-ink-soft: color-mix(in srgb, var(--er-on-band) 82%, var(--er-band));
+  --c-gold-ink: var(--c-gold);
+  --c-bg: var(--er-band);
+  --c-line: color-mix(in srgb, var(--c-gold) 40%, var(--er-band));
+  background:
+    radial-gradient(70% 55% at 50% 45%, color-mix(in srgb, var(--er-on-band) 7%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, rgb(0 0 0 / 0.06) 0 2px, transparent 2px 9px),
+    var(--er-fill);
+}
+/* Ivory cards inside a burgundy band keep their ink. */
+[data-template='eternal-romance'] main > section:nth-child(even) .bg-inv-surface {
+  --c-ink: var(--er-ink);
+  --c-ink-soft: var(--er-ink-soft);
+  --c-gold-ink: var(--er-gold-ink);
+  --c-bg: var(--er-bg);
+  --c-line: var(--er-line);
+}
+
+/* The wave that joins each band to the one above it, with a gold hairline along its crest. */
+[data-template='eternal-romance'] main > section:not(:last-child)::before,
+[data-template='eternal-romance'] main > section:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: calc(1px - var(--er-wave));
+  height: var(--er-wave);
+  pointer-events: none;
+  -webkit-mask: var(--er-wave-fill) center / 100% 100% no-repeat;
+  mask: var(--er-wave-fill) center / 100% 100% no-repeat;
+  background: var(--er-fill);
+}
+[data-template='eternal-romance'] main > section:not(:last-child)::after {
+  -webkit-mask-image: var(--er-wave-line);
+  mask-image: var(--er-wave-line);
+  background: color-mix(in srgb, var(--c-gold) 75%, transparent);
+}
+[data-template='eternal-romance'] main > section:nth-child(4n + 2)::before,
+[data-template='eternal-romance'] main > section:nth-child(4n + 2)::after,
+[data-template='eternal-romance'] main > section:nth-child(4n + 3)::before,
+[data-template='eternal-romance'] main > section:nth-child(4n + 3)::after {
+  transform: scaleX(-1);
+}
+
+/* Panels lose their card: the band is the surface now. */
+[data-template='eternal-romance'] main > section:not(:last-child) > div.mx-auto {
+  background: transparent;
+  box-shadow: none;
+  border-color: transparent;
+  padding-block: 1.5rem;
+}
+[data-template='eternal-romance'] main > section:not(:last-child) > div.mx-auto.bg-inv-band {
+  border-radius: 2rem;
+}
+/* The countdown on an ivory band keeps a burgundy velvet card; on a burgundy band it melts in. */
+[data-template='eternal-romance'] main > section:nth-child(odd) > div.mx-auto.bg-inv-band {
+  background: var(--er-band);
+  box-shadow: 0 24px 48px -28px rgb(58 13 23 / 0.6);
+  border: 1px solid color-mix(in srgb, var(--c-gold) 45%, transparent);
+}
+
+/* Ivory cards on burgundy: a deeper shadow, like paper laid on velvet. */
+[data-template='eternal-romance'] main > section:nth-child(even) .bg-inv-surface.gold-frame {
+  box-shadow: 0 28px 50px -24px rgb(10 2 4 / 0.65);
+}
+
+/* Programme markers: little gold roses' buds (a diamond with a burgundy heart). */
+[data-template='eternal-romance'] #programme li > span[aria-hidden='true'] {
+  background: var(--er-band);
+  border-color: var(--c-gold);
+  box-shadow: 0 0 0 3px var(--c-bg);
+}
+
+/* ── The closing line and the footer sit on the stage again; the last band drops a wave onto it. ── */
+[data-template='eternal-romance'] main > section:last-child {
+  padding-top: calc(var(--er-wave) + 4.5rem);
+  padding-bottom: 3.5rem;
+}
+[data-template='eternal-romance'] main > section:last-child:not(:first-child)::before,
+[data-template='eternal-romance'] main > section:last-child:not(:first-child)::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: -1px;
+  height: var(--er-wave);
+  pointer-events: none;
+  -webkit-mask: var(--er-wave-drop) center / 100% 100% no-repeat;
+  mask: var(--er-wave-drop) center / 100% 100% no-repeat;
+  background: var(--er-bg);
+}
+[data-template='eternal-romance'] main > section:last-child:nth-child(odd)::before {
+  background: var(--er-band);
+}
+[data-template='eternal-romance'] main > section:last-child:not(:first-child)::after {
+  -webkit-mask-image: var(--er-wave-drop-line);
+  mask-image: var(--er-wave-drop-line);
+  background: color-mix(in srgb, var(--c-gold) 75%, transparent);
+}
+[data-path] [data-template='eternal-romance'] main > section:last-child p {
+  text-shadow:
+    0 2px 4px rgb(22 4 9 / 0.9),
+    0 0 26px rgb(22 4 9 / 0.85);
+}
+[data-path] [data-template='eternal-romance'] > footer {
+  text-shadow: 0 0 12px rgb(22 4 9 / 0.95);
+}
