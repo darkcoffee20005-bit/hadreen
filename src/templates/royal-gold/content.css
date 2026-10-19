@@ -13,7 +13,7 @@
 }
 [data-path] [data-template='royal-gold'] > header > div[aria-hidden='true']:first-child {
   background: radial-gradient(
-    64% 42% at 50% 50%,
+    70% 56% at 50% 50%,
     color-mix(in srgb, var(--c-bg) 86%, transparent) 0%,
     color-mix(in srgb, var(--c-bg) 55%, transparent) 55%,
     transparent 100%
@@ -22,6 +22,12 @@
 [data-path] [data-template='royal-gold'] > header p,
 [data-path] [data-template='royal-gold'] > header a {
   color: var(--c-ink);
+}
+/* A soft ivory halo keeps the small lines legible over the zellige frieze and the gilded wall. */
+[data-path] [data-template='royal-gold'] > header p {
+  text-shadow:
+    0 0 3px var(--c-bg),
+    0 0 12px color-mix(in srgb, var(--c-bg) 95%, transparent);
 }
 [data-path] [data-template='royal-gold'] > header > p:first-of-type {
   color: var(--c-gold-ink);
