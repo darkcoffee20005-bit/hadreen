@@ -182,6 +182,14 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
     const s = inviteStore.getState();
     let id: ReturnType<typeof setTimeout> | undefined;
     const ready = (ms: number) => (id = setTimeout(() => publishProbe({ ready: true }), ms));
+    if (capture === 'video') {
+      // The recorder drives everything from here (see capture.ts).
+      if (phase === 'gate' && path === '3d') {
+        publishProbe({ open: () => inviteStore.getState().open(), introDuration: s.intro?.duration ?? 0 });
+        ready(900);
+      }
+      return () => clearTimeout(id);
+    }
     if (phase === 'gate') {
       if (capture === 'gate') ready(900);
       else s.open();

@@ -26,7 +26,8 @@
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
     "static": "tsx scripts/build-static.ts",
-    "budget": "tsx scripts/budget.ts"
+    "budget": "tsx scripts/budget.ts",
+    "previews": "tsx scripts/record-previews.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",

@@ -62,6 +62,7 @@ function FrameDriver() {
       raf = requestAnimationFrame(loop);
       if (document.hidden) return;
       const { phase, tier, lastInteraction, capture } = inviteStore.getState();
+      if (capture === 'video') return; // the recorder renders each frame itself (below)
       // Capture mode: once the moment is published, hold the frame still so a screenshot or a
       // video frame never reads a half-drawn buffer.
       if (capture && window.__hadreen?.ready && ++readyFrames > 3) return;
@@ -70,10 +71,16 @@ function FrameDriver() {
       if (fps && now - last < 1000 / fps - 2) return;
       last = now;
       gl.info.reset();
-      advance(now);
+      advance(now / 1000); // R3F's clock runs in seconds
     };
     raf = requestAnimationFrame(loop);
     publishProbe({
+      frame: (introSeconds, clockSeconds) => {
+        const intro = inviteStore.getState().intro;
+        if (introSeconds !== null) intro?.seek(introSeconds);
+        gl.info.reset();
+        advance(clockSeconds);
+      },
       renderInfo: () => ({
         calls: gl.info.render.calls,
         triangles: gl.info.render.triangles,
