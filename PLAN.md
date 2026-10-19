@@ -1,6 +1,6 @@
 # Hadreen (حاضرين): Build Plan
 
-> **Status:** Phase 0 is done. This plan is written and **waiting for your approval**. No app code exists yet.
+> **Status:** Phase 1 (backend and platform) is done. Next: Phase 2, the shared invitation engine. See §17 for what Phase 1 changed in this plan.
 > **Brief:** `docs/BRIEF.md` (text) and `docs/brief.pdf` (original).
 > **Resuming:** a new session reads this file first, finds the first unchecked item in §0 and continues from there.
 
@@ -9,7 +9,7 @@
 ## 0. Progress tracker
 
 - [x] **Phase 0**: study the inspiration and the reference, then write PLAN.md
-- [ ] **Phase 1**: backend and platform (data model, routes, couple dashboard, admin, seed, tests)
+- [x] **Phase 1**: backend and platform (data model, routes, couple dashboard, admin, seed, tests)
 - [ ] **Phase 2**: shared invitation engine (`src/lib/invite`) plus an engine test stage
 - [ ] **Phase 3a**: pilot template الحديقة المقدّسة, then stop for your review *(proposed checkpoint)*
 - [ ] **Phase 3b**: the other five templates
@@ -40,7 +40,7 @@ Ask before adding any paid service. Secrets go only in `.env`, documented in `.e
 | 7 | **RSVP from the generic link** (a guest without a personal token types their name). Should it be allowed, and with how many seats? | Allowed, capped at 2 seats. The couple can set the cap to 0 to turn it off. |
 | 8 | **Reduced-motion users** get the 2D version, as the brief says. Should they also see a small opt-in button «شغّلوا النسخة ثلاثية الأبعاد»? | Yes: 2D by default, with an opt-in button. |
 | 9 | **Single-guest editing in the couple dashboard** (add, edit, delete, regenerate link), on top of CSV import. | Yes. |
-| 10 | **Production domain**, used for canonical URLs, OG images and the sitemap. | Read from `NEXT_PUBLIC_SITE_URL`, with a placeholder until you choose. |
+| 10 | **Production domain**, used for canonical URLs, OG images and the sitemap. | Read from `SITE_URL` at runtime, with a placeholder until you choose. |
 | 11 | **Next.js version.** The brief says 15; 16.4 is the current release. | Stay on 15.5.x as written. |
 | 12 | **The couple in الذهب الملكي**, seen from behind. Procedural figures are hard to make beautiful. | Start with stylised, modest procedural silhouettes with rim light. If they miss the quality bar, I'll ask before using CC0 models. |
 | 13 | **Music.** You'll supply licensed tracks for `/public/music`. | Until then, each template gets a synthesized placeholder with its own mood (§9). |
@@ -134,7 +134,7 @@ Versions were checked against npm on 2026‑10‑18 and get pinned exactly at sc
 | Auth | iron-session | 9.0.1 | Admin session. |
 | Rate limiting | @upstash/ratelimit, @upstash/redis | 2.2.0, 1.39.0 | Falls back to in-memory in dev. |
 | Utilities | nanoid 6.0.2, qrcode 1.5.4, papaparse 5.7.0 | | |
-| Tests | vitest 5.0.5, @playwright/test 1.64.1 | | In the sandbox, Playwright uses the preinstalled Chromium via `executablePath`. |
+| Tests | vitest 5.0.5, @playwright/test 1.56.1 | | 1.56.1 matches the sandbox's preinstalled Chromium build (1194). |
 | Lint and format | eslint 9.39.5, eslint-config-next 15.5.28, prettier 3.9.10 | | |
 | Dev and pipeline | leva 0.10.1, r3f-perf 7.2.3, @gltf-transform/cli 4.5.1, subset-font 2.9.0, world-atlas 2.0.2 | | |
 
@@ -207,7 +207,7 @@ export interface TemplateMeta {            // light: imported by the registry, a
   - Size caps: RSVP 2 KB; events 4 KB and at most 20 items.
   - Rate limits: 20/min per IP and 6/min per token.
 - **Headers:**
-  - CSP with a nonce. It includes `worker-src 'self' blob:` because troika runs its worker from a blob URL.
+  - CSP with a nonce (Phase 5 hardening; Phase 1 ships `frame-ancestors` only). It includes `worker-src 'self' blob:` because troika runs its worker from a blob URL.
   - `frame-ancestors 'self'` on `/i/*`, for the admin preview and the marketing phone; `'none'` everywhere else.
   - `nosniff`, plus a `Permissions-Policy` that allows device orientation only on `/i/*`.
 
@@ -1390,3 +1390,33 @@ Screenshots (§0).
 
 **Deployment**
 - A Vercel connector is attached to this session, so Phase 5 deployment can run from here once you approve it.
+
+---
+
+## 17. Phase log
+
+### Phase 1: backend and platform (done)
+
+**Delivered**
+- Next.js 15.5 app with two root layouts (`(site)` Arabic RTL; `(invite)/i/[slug]` takes lang/dir from the wedding) and a global 404.
+- Prisma 7 schema and first migration; local Postgres via `pnpm db:up`; seed with six demo weddings (`demo-<template>`, rolling demo dates, example guests and answers).
+- `/i/[slug]`: full invitation content in the DOM (greeting by household, names, date line, countdown, programme, venue with map and calendar, dress code, notes, RSVP, closing, footer). No 3D yet. Beacons for `opened`, `map` and `calendar`.
+- `POST /api/rsvp` (personal link and generic link, idempotent, seat cap, deadline, rate limits, same-origin check) and `POST /api/events` (batched, bots ignored, opens de-duplicated).
+- `calendar.ics` (RFC 5545 folding for Arabic), Google Calendar link, and share images in each template's palette.
+- `/d/[slug]`: couple dashboard with totals, search with Arabic normalisation, filters, per-guest message copy, QR, new link, edit and delete, message wall, CSV import with preview, and CSV export (BOM).
+- `/admin`: login, wedding list, editor with live phone preview, duplicate, publish, delete, bulk CSV import.
+- Tests: 64 unit and 6 integration (Vitest), 7 end-to-end (Playwright). Screenshots in `screenshots/phase-1/`.
+
+**Changes to this plan**
+- **Share images:** the Phase 1 spike confirmed Satori draws Arabic as unjoined letters. Text is shaped with HarfBuzz (`harfbuzzjs`) into SVG paths (`src/lib/og/shape.ts`), with a small bidi pass so numbers read left-to-right.
+- **Generic-link RSVPs:** the browser keeps a random key, stored as `Guest.clientKey` (+), so retries and later edits update one guest instead of creating duplicates.
+- **Personal links** look the guest up by slug and token, so a cached wedding never points at a stale id after a re-seed.
+- **`SITE_URL`** (runtime) replaces `NEXT_PUBLIC_SITE_URL`, so one build can serve any origin.
+- **E2E database** is migrated with `prisma migrate deploy` (non-destructive) and tests create their own uniquely named data. Prisma refuses `migrate reset` from an AI agent, and a reset isn't needed.
+- **Server modules** live in `src/lib` as `rsvp.ts`, `events.ts`, `dashboard.ts`, `weddings.ts`, `wedding-cache.ts` and `og/`, next to the pure helpers listed in §5.
+
+**Known gaps (later phases)**
+- The invitation has no gate, opening or 3D yet; "افتحوا الدعوة" just scrolls to the details (Phase 2).
+- One production build failed once while downloading Google Fonts and passed on retry. If it recurs, switch to self-hosted font files.
+- Full nonce-based CSP is deferred to Phase 5.
+

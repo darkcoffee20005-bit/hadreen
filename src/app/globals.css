@@ -1,0 +1,97 @@
+@import 'tailwindcss';
+
+/* Brand tokens (site, dashboard, admin). */
+@theme {
+  --color-emerald: #0b3d2e;
+  --color-emerald-deep: #072a20;
+  --color-emerald-soft: #e3ece7;
+  --color-gold: #c9a96e;
+  --color-gold-ink: #7a5c26;
+  --color-ivory: #f8f3e8;
+  --color-paper: #fffdf8;
+  --color-ink: #13261f;
+  --color-ink-soft: #4b5d55;
+  --color-line: #e4dac8;
+  --color-danger: #9b1c1c;
+
+  --font-display: var(--font-aref), 'Amiri', serif;
+  --font-serif: var(--font-amiri), serif;
+  --font-ui: var(--font-tajawal), system-ui, sans-serif;
+}
+
+/* Invitation tokens: set per wedding as CSS variables (see paletteCssVars). */
+@theme inline {
+  --color-inv-bg: var(--c-bg);
+  --color-inv-surface: var(--c-surface);
+  --color-inv-ink: var(--c-ink);
+  --color-inv-ink-soft: var(--c-ink-soft);
+  --color-inv-accent: var(--c-accent);
+  --color-inv-on-accent: var(--c-on-accent);
+  --color-inv-gold: var(--c-gold);
+  --color-inv-gold-ink: var(--c-gold-ink);
+  --color-inv-line: var(--c-line);
+  --color-inv-band: var(--c-band);
+  --color-inv-on-band: var(--c-on-band);
+
+  --font-inv-display: var(--f-display);
+  --font-inv-serif: var(--f-serif);
+  --font-inv-ui: var(--f-ui);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply font-ui;
+  }
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+  /* Arabic display faces sit high; give them room so ascenders/dots never clip. */
+  .leading-display {
+    line-height: 1.5;
+  }
+}
+
+.invite-lang-ar {
+  --f-display: var(--font-aref), serif;
+  --f-serif: var(--font-amiri), serif;
+  --f-ui: var(--font-tajawal), system-ui, sans-serif;
+}
+.invite-lang-en {
+  --f-display: var(--font-pinyon), cursive;
+  --f-serif: var(--font-cormorant), serif;
+  --f-ui: var(--font-jost), system-ui, sans-serif;
+}
+
+/* Thin double gold frame used on invitation cards. */
+.gold-frame {
+  position: relative;
+}
+.gold-frame::before,
+.gold-frame::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--c-gold) 70%, transparent);
+  border-radius: inherit;
+}
+.gold-frame::before {
+  inset: 10px;
+}
+.gold-frame::after {
+  inset: 14px;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

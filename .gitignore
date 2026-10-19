@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+*.tsbuildinfo
+
+# env (keep .env.example)
+.env
+.env*.local
+
+# local postgres (scripts/db-local.sh)
+.pg/
+
+# generated prisma client (pnpm install runs prisma generate)
+src/generated/
+
+# test output
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+.DS_Store

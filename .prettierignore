@@ -1,0 +1,8 @@
+.next
+.pg
+node_modules
+pnpm-lock.yaml
+src/generated
+reference
+screenshots
+docs/brief.pdf

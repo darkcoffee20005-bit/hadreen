@@ -1,0 +1,122 @@
+// Hadreen data model. Fields marked (+) are additions to the brief, listed in PLAN.md §6.
+// Prisma 7: the connection URL lives in prisma.config.ts and the client uses @prisma/adapter-pg.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Lang {
+  ar
+  en
+}
+
+enum WeddingStatus {
+  draft
+  live
+}
+
+/// (+) open = the guest RSVP'd through the generic link and typed their own name.
+enum GuestSource {
+  invited
+  open
+}
+
+enum EventType {
+  opened
+  intro_completed
+  rsvp
+  calendar
+  map
+}
+
+model Wedding {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  /// Template registry id (src/templates), validated with Zod.
+  template         String
+  lang             Lang          @default(ar)
+  groomName        String
+  brideName        String
+  monogram         String
+  dateTimeUtc      DateTime      @db.Timestamptz(3)
+  verse            String?
+  intro            String        @default("")
+  venueName        String
+  venueArea        String
+  mapsUrl          String        @default("")
+  /// { label, swatches: hex[], ladies, gentlemen }
+  dressCode        Json          @default("{}")
+  notes            String        @default("")
+  rsvpDeadline     DateTime      @db.Timestamptz(3)
+  /// [{ time: "19:30", title, subtitle }]
+  schedule         Json          @default("[]")
+  musicTrack       String
+  /// { variant?, ...partial palette tokens }
+  paletteOverrides Json          @default("{}")
+  originCity       String?
+  destinationCity  String?
+  status           WeddingStatus @default(draft)
+  coupleSecret     String        @unique
+  /// (+) demo ribbon and a rolling demo date
+  isDemo           Boolean       @default(false)
+  /// (+) seat cap for RSVPs through the generic link; 0 turns them off
+  openRsvpMaxSeats Int           @default(2)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  guests Guest[]
+  events Event[]
+}
+
+model Guest {
+  id          String      @id @default(cuid())
+  weddingId   String
+  displayName String
+  token       String      @unique
+  maxSeats    Int         @default(2)
+  group       String?
+  /// (+)
+  source      GuestSource @default(invited)
+  /// (+) device key for generic-link RSVPs, so retries and edits reuse the same guest
+  clientKey   String?
+  createdAt   DateTime    @default(now())
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  rsvp    Rsvp?
+  events  Event[]
+
+  @@unique([weddingId, clientKey])
+  @@index([weddingId])
+}
+
+model Rsvp {
+  id        String   @id @default(cuid())
+  guestId   String   @unique
+  attending Boolean
+  seats     Int
+  message   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id        BigInt    @id @default(autoincrement())
+  weddingId String
+  guestId   String?
+  type      EventType
+  userAgent String    @default("")
+  createdAt DateTime  @default(now())
+
+  wedding Wedding @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@index([weddingId, type, createdAt])
+  @@index([guestId])
+}
