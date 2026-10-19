@@ -1,15 +1,16 @@
 import { Amiri, Aref_Ruqaa, Cormorant_Garamond, Jost, Pinyon_Script, Tajawal } from 'next/font/google';
 
 // Self-hosted at build time by next/font, with size-adjusted fallbacks (no layout shift).
+// `subsets` only sets what is preloaded: Arabic. Latin glyphs (handles, English) load on demand.
 export const arefRuqaa = Aref_Ruqaa({
-  subsets: ['arabic', 'latin'],
+  subsets: ['arabic'],
   weight: ['400', '700'],
   variable: '--font-aref',
   display: 'swap',
 });
-export const amiri = Amiri({ subsets: ['arabic', 'latin'], weight: ['400', '700'], variable: '--font-amiri', display: 'swap' });
+export const amiri = Amiri({ subsets: ['arabic'], weight: ['400', '700'], variable: '--font-amiri', display: 'swap' });
 export const tajawal = Tajawal({
-  subsets: ['arabic', 'latin'],
+  subsets: ['arabic'],
   weight: ['400', '500', '700'],
   variable: '--font-tajawal',
   display: 'swap',

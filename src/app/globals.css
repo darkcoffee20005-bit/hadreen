@@ -294,3 +294,46 @@
     transform: translateY(4px);
   }
 }
+
+/* ───────────────────────── Marketing site ───────────────────────── */
+
+.site-ticker {
+  animation: site-ticker 38s linear infinite;
+}
+[dir='rtl'] .site-ticker {
+  animation-name: site-ticker-rtl;
+}
+@keyframes site-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes site-ticker-rtl {
+  to {
+    transform: translateX(50%);
+  }
+}
+
+/* An eight-pointed star lattice, drawn in CSS, for emerald panels. */
+.site-girih {
+  background-image:
+    conic-gradient(from 22.5deg at 50% 50%, transparent 0 12.5%, var(--color-gold) 0 25%, transparent 0 37.5%, var(--color-gold) 0 50%, transparent 0 62.5%, var(--color-gold) 0 75%, transparent 0 87.5%, var(--color-gold) 0);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(70% 70% at 50% 50%, black, transparent);
+}
+
+/* The 3D phone: tilt comes from --rx/--ry, set by pointer. */
+.site-phone {
+  transform: perspective(1400px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-ticker {
+    animation: none;
+  }
+  .site-phone {
+    transform: none;
+  }
+}
