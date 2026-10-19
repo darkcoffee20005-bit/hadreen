@@ -5,7 +5,7 @@ import { PREVIEWS } from './previews.data';
  * A design's poster frame: the recorded preview poster when present, over a painted card in the
  * design's colours (so it never shows an empty box while loading or before previews exist).
  */
-export function Poster({ template: t, className = '' }: { template: TemplateMeta; className?: string }) {
+export function Poster({ template: t, className = '', priority = false }: { template: TemplateMeta; className?: string; priority?: boolean }) {
   const p = t.palette;
   return (
     <span
@@ -19,7 +19,7 @@ export function Poster({ template: t, className = '' }: { template: TemplateMeta
       </span>
       {PREVIEWS.includes(t.id) && (
         // eslint-disable-next-line @next/next/no-img-element -- static poster files, sized by CSS
-        <img src={`/previews/${t.id}.jpg`} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
+        <img src={`/previews/${t.id}.jpg`} alt="" loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} className="absolute inset-0 size-full object-cover" />
       )}
     </span>
   );

@@ -47,16 +47,53 @@ export class AudioEngine {
    * music in the background: it fades in whenever it's ready, so it never holds up the gate.
    */
   async prepare(trackId: string, onProgress?: (p: number) => void): Promise<void> {
-    for (const [i, name] of FOLEY.entries()) {
-      if (!this.foleyData.has(name)) this.foleyData.set(name, synthesizeFoley(name));
-      onProgress?.((i + 1) / FOLEY.length);
-      await new Promise((resolve) => setTimeout(resolve, 0));
+    const worker = this.startWorker();
+    if (!worker) {
+      // No workers (very old browsers, tests): synthesize here, yielding between sounds.
+      for (const [i, name] of FOLEY.entries()) {
+        if (!this.foleyData.has(name)) this.foleyData.set(name, synthesizeFoley(name));
+        onProgress?.((i + 1) / FOLEY.length);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    } else {
+      await new Promise<void>((resolve) => {
+        worker.addEventListener('message', (e: MessageEvent) => {
+          const m = e.data as { kind: string; name?: FoleyName; data?: Float32Array };
+          if (m.kind === 'foley' && m.name && m.data) {
+            this.foleyData.set(m.name, m.data);
+            onProgress?.(this.foleyData.size / FOLEY.length);
+          } else if (m.kind === 'foley-done') resolve();
+        });
+        worker.postMessage({ kind: 'foley' });
+      });
     }
     this.musicReady ??= (async () => {
       this.licensedUrl = await findLicensedTrack(trackId);
-      if (!this.licensedUrl) this.musicData = await renderMusic(hasPlaceholder(trackId) ? trackId : 'harp-nahawand');
+      if (this.licensedUrl) return;
+      const id = hasPlaceholder(trackId) ? trackId : 'harp-nahawand';
+      this.musicData = worker
+        ? await new Promise<[Float32Array, Float32Array]>((resolve) => {
+            worker.addEventListener('message', (e: MessageEvent) => {
+              const m = e.data as { kind: string; left?: Float32Array; right?: Float32Array };
+              if (m.kind === 'music' && m.left && m.right) resolve([m.left, m.right]);
+            });
+            worker.postMessage({ kind: 'music', id });
+          })
+        : await renderMusic(id);
       if (this.wantsMusic) this.startMusic();
     })();
+  }
+
+  private worker: Worker | null = null;
+  private startWorker(): Worker | null {
+    if (this.worker) return this.worker;
+    if (typeof Worker === 'undefined') return null;
+    try {
+      this.worker = new Worker(new URL('./synth.worker.ts', import.meta.url), { type: 'module' });
+    } catch {
+      this.worker = null;
+    }
+    return this.worker;
   }
 
   get ready(): boolean {

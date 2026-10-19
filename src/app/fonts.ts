@@ -8,7 +8,7 @@ export const arefRuqaa = Aref_Ruqaa({
   variable: '--font-aref',
   display: 'swap',
 });
-export const amiri = Amiri({ subsets: ['arabic'], weight: ['400', '700'], variable: '--font-amiri', display: 'swap' });
+export const amiri = Amiri({ subsets: ['arabic'], weight: ['400'], variable: '--font-amiri', display: 'swap' });
 export const tajawal = Tajawal({
   subsets: ['arabic'],
   weight: ['400', '500', '700'],

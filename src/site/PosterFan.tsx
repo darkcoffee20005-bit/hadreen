@@ -20,7 +20,7 @@ export function PosterFan() {
           className="absolute aspect-[1/2] h-full max-h-[440px] transition-transform duration-700"
           style={{ transform: `translateX(${d * 62}%) scale(${d === 0 ? 1 : 0.82}) rotate(${d * -6}deg)`, zIndex: d === 0 ? 2 : 1, opacity: d === 0 ? 1 : 0.7 }}
         >
-          <Poster template={TEMPLATES[i]!} className="h-full w-full" />
+          <Poster template={TEMPLATES[i]!} className="h-full w-full" priority={d === 0} />
         </button>
       ))}
     </div>

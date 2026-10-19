@@ -22,7 +22,10 @@ const IDLE_AFTER_TOUCH_MS = 10_000;
  */
 export function HeroInteractive({ views, children }: { views: SceneView[]; children: React.ReactNode }) {
   const active = useHero((s) => s.active);
-  const [stage, setStage] = useState<{ mode: 'pending' | '3d' | 'posters'; tier: Tier }>({ mode: 'pending', tier: 'low' });
+  // Posters paint first (server-rendered, the page's largest image); live 3D cards fade in over
+  // them once the device has been checked.
+  const [stage, setStage] = useState<{ mode: 'posters' | '3d'; tier: Tier }>({ mode: 'posters', tier: 'low' });
+  const [postersShown, setPostersShown] = useState(true);
   const [visible, setVisible] = useState(true);
   const section = useRef<HTMLDivElement>(null);
   const template = TEMPLATES[active]!;
@@ -33,7 +36,9 @@ export function HeroInteractive({ views, children }: { views: SceneView[]; child
     let cancelled = false;
     const run = () =>
       detectCapability(window.location.search).then((cap) => {
-        if (!cancelled) setStage({ mode: cap.path === '3d' ? '3d' : 'posters', tier: cap.tier });
+        if (cancelled || cap.path !== '3d') return;
+        setStage({ mode: '3d', tier: cap.tier });
+        window.setTimeout(() => !cancelled && setPostersShown(false), 2200);
       });
     const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 400));
     const id = idle(() => void run());
@@ -70,8 +75,12 @@ export function HeroInteractive({ views, children }: { views: SceneView[]; child
         <div className="relative z-10 text-center lg:w-[44%] lg:text-start">{children}</div>
 
         <div className="max-lg:relative max-lg:-mx-5 max-lg:h-[min(52svh,460px)] lg:absolute lg:inset-0 lg:-z-10">
+          {postersShown && (
+            <div className={`absolute inset-0 transition-opacity duration-1000 ${stage.mode === '3d' ? 'opacity-0' : 'opacity-100'}`}>
+              <PosterFan />
+            </div>
+          )}
           {stage.mode === '3d' && <HeroStage views={views} tier={stage.tier} visible={visible} />}
-          {stage.mode === 'posters' && <PosterFan />}
         </div>
 
         <div className="relative z-10 text-center lg:mt-10 lg:w-[44%] lg:text-start">
