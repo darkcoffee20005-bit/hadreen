@@ -11,8 +11,8 @@
 - [x] **Phase 0**: study the inspiration and the reference, then write PLAN.md
 - [x] **Phase 1**: backend and platform (data model, routes, couple dashboard, admin, seed, tests)
 - [x] **Phase 2**: shared invitation engine (`src/lib/invite`) plus an engine test stage
-- [ ] **Phase 3**: the six templates *(you asked me to carry on through every phase, so the 3a review checkpoint is folded in: all six are built together)*
-- [ ] **Phase 4**: marketing website (`/`), preview videos, SEO
+- [x] **Phase 3**: the six templates *(you asked me to carry on through every phase, so the 3a review checkpoint is folded in: all six are built together)*
+- [x] **Phase 4**: marketing website (`/`), preview videos, SEO
 - [ ] **Phase 5**: polish, QA and docs
 
 **Steps at the end of every phase:**
@@ -1463,3 +1463,53 @@ Screenshots (§0).
 **Known gaps (later phases)**
 - Every template still plays the engine test stage; bespoke scenes and 2D fallbacks arrive in Phase 3.
 - Placeholder music is synthesized; licensed tracks are a drop-in (`public/music/manifest.json`) once you choose them.
+
+### Phase 3: the six templates (done)
+
+**Delivered** — each template has its own scene (`src/templates/<id>/Scene.tsx` plus pure-logic modules with unit tests), a 2D fallback, scoped content styling and, where the spec asked, extras:
+
+- **الحديقة المقدّسة** — blush envelope, seal cracking into four Voronoi shards, curling flap; a rose-wrapped stone arch over a reflecting pool at golden hour; procedural swans gliding on Kelvin wakes into a heart; basmala and names in gold. Planar reflection on high, mirrored garden on medium/low.
+- **ورد وعود** — rounded rose-gold-foiled flap with a pressed rose; satin curtains parting to tiebacks under a crystal chandelier (transmission on high only); a palm avenue in pink mist to a palace gate; scroll travels the avenue.
+- **دولتشي فيتا** — scratch gate (the shell's DOM tiles) over a card on a balustrade; a bright lake with mountains, villas and a sailboat; the letter rises from the envelope with scroll; programme on pastel clouds.
+- **الذهب الملكي** — four-flap ivory pochette on emerald; golden light into an arch hall with swinging brass lanterns; the couple walking to a pale-gold mosque; gold line-art programme icons.
+- **الرومانسية الأبدية** — burgundy velvet curtain (hold gate) rising into swags; candlelit table with roses and a gold-framed name card; a palace façade drawing itself in gold; ivory/burgundy content bands with wave edges; depth of field on high.
+- **حب بلا حدود** — porcelain globe of gold land dots; a great-circle flight with a gold trail from the origin city to Baghdad; boarding pass rising from the venue pin; «حاضرين» tears the stub (3D and DOM).
+
+Every opening is a pure function of its time (`timeline.ts`), so skip, seek, capture and the marketing thumbnails land on exact frames. All art is procedural; no models or images were downloaded.
+
+**Budget** (`pnpm budget`, production build, phone, cache off):
+
+| Template | Budget | 3D before intro | 2D before intro | Requests (3D) | Gate calls / tris | Content calls / tris |
+|---|---:|---:|---:|---:|---:|---:|
+| sacred-garden | 1200 KB | 1089 KB | 617 KB | 44 | 55 / 133951 | 52 / 137523 |
+| blossom-oud | 1400 KB | 1085 KB | 616 KB | 44 | 24 / 3199 | 42 / 103828 |
+| dolce-vita | 1300 KB | 1080 KB | 616 KB | 43 | 67 / 283263 | 79 / 284543 |
+| royal-gold | 1400 KB | 1085 KB | 617 KB | 44 | 61 / 13238 | 58 / 44362 |
+| eternal-romance | 1300 KB | 1080 KB | 616 KB | 47 | 46 / 124737 | 46 / 124737 |
+| destination-love | 1300 KB | 1129 KB | 616 KB | 46 | 30 / 26899 | 49 / 27127 |
+
+**How it was built.** Each template was built by a separate agent working only inside its own folder against a shared brief (engine contract, ground rules, verification by capture-mode screenshots), two at a time; the main session reviewed every set of screenshots, ran the full checks, and committed each template. Engine fixes found on the way: R3F's clock was fed milliseconds (motion 1000× too fast), thumbnails' render targets cleared transparent, reduced motion let infinite CSS loops flicker.
+
+**Changes to this plan**
+- The 3a review checkpoint was folded in (you asked me to carry on through every phase).
+- Dolce Vita's scratch tiles are the shell's DOM tiles, not a 3D render-target mask (accessible, same on both paths).
+- Royal Gold's programme icons are an SVG frieze after the hero (no per-item slot in the programme list).
+- Placeholder music has no oud or crackle sounds; those beats use chimes/paper cues until licensed audio arrives.
+
+**Known gaps**
+- Triangle counts are high for Dolce Vita (~285k on medium) and Sacred Garden (~135k): instanced roses and mountain grids. Draw calls are within budget; trimming is listed for Phase 5 if real devices need it.
+- Small 3D text (boarding pass, Dolce Vita card) is decorative; the DOM always carries the readable copy.
+
+### Phase 4: marketing website (done)
+
+**Delivered**
+- `/`: hero with a 3D carousel where every card is a live, low-tier run of its template's opening (own scene, store and camera, rendered into a texture round-robin, the front card most often); posters on the low tier and without WebGL; DOM picker and calls to action; drag to turn, sting on selection.
+- Occasions ticker; a CSS-3D phone running a real demo (iframe on desktop, preview video on phones); gallery with style filters and looping preview videos; what's included; price (٤٩ ألف دينار, one plan); three steps; FAQ; final call to action; footer. Orders: Instagram only.
+- Preview videos: `pnpm previews` records each opening frame by frame through `?capture=video` and encodes MP4 + poster (`public/previews/`, 0.5–0.9 MB each).
+- SEO: Arabic metadata, share image (HarfBuzz-shaped), sitemap, robots.
+- Tests: site e2e (picker, filters, price, FAQ, Instagram-only links, robots, sitemap) and copy rules (no phone/WhatsApp, no unprovable claims).
+
+**Changes to this plan**
+- Preview videos are MP4 only: VP9 came out larger than H.264 at the same quality for this content.
+- The phone is CSS-3D around a real iframe (a WebGL phone can't host an iframe).
+- **FAQ**: only answers true of the product today. Delivery time, number of edits, link lifetime, payment methods, changes after publishing and the occasions you cover still need your answers (decision 6).
