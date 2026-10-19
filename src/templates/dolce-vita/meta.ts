@@ -39,7 +39,7 @@ export const dolceVita: TemplateMeta = {
   ],
   music: { moodAr: 'مشمس وخفيف', moodEn: 'Sunny light acoustic', bpm: 96, placeholder: 'mandolin-major' },
   intro: { duration: 7.5 },
-  gate: { gesture: 'scratch', labelAr: 'امسحوا البطاقات حتى يبين الموعد', labelEn: 'Scratch the tiles to reveal the date' },
+  gate: { gesture: 'scratch', labelAr: 'امسحوا البطاقات حتى يبين الموعد', labelEn: 'Scratch the tiles to reveal the date', header: 'names' },
   closingAr: 'ننتظركم لنحتفل سوا',
   closingEn: 'Come celebrate with us',
   og: 'light',

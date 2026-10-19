@@ -1,4 +1,158 @@
 /*
  * Content-page styling for dolce-vita. Everything here is scoped under [data-template='dolce-vita'] (the
  * content root carries the attribute), so it never reaches another template.
+ *
+ * The stage behind the content is bright (powder sky, pastel hills, the lake), so over it, inside
+ * the invitation shell ([data-path] on an ancestor), the hero, closing line and footer read in navy
+ * ink and gold-ink on a soft haze instead of light-on-dark. Without the shell (admin preview on the
+ * navy band) the defaults stay.
  */
+
+[data-path] [data-template='dolce-vita'] > header {
+  color: var(--c-ink);
+}
+[data-path] [data-template='dolce-vita'] > header > div[aria-hidden='true']:first-child {
+  background: radial-gradient(
+    64% 52% at 50% 48%,
+    color-mix(in srgb, var(--c-bg) 84%, transparent) 0%,
+    color-mix(in srgb, var(--c-bg) 58%, transparent) 52%,
+    transparent 100%
+  );
+}
+[data-path] [data-template='dolce-vita'] > header p,
+[data-path] [data-template='dolce-vita'] > header a {
+  color: var(--c-ink);
+  text-shadow:
+    0 0 3px var(--c-bg),
+    0 0 14px color-mix(in srgb, var(--c-bg) 92%, transparent);
+}
+[data-path] [data-template='dolce-vita'] > header > p:first-of-type {
+  color: var(--c-gold-ink);
+}
+[data-path] [data-template='dolce-vita'] > header svg {
+  color: var(--c-gold-ink);
+}
+[data-path] [data-template='dolce-vita'] > header > p:nth-of-type(2),
+[data-path] [data-template='dolce-vita'] > header > p:last-of-type {
+  color: var(--c-ink-soft);
+}
+/* The names in navy, the «و» in gold: like the names that floated over the envelope. */
+[data-path] [data-template='dolce-vita'] #invite-hero {
+  color: var(--c-ink);
+  text-shadow:
+    0 1px 0 rgb(255 255 255 / 0.9),
+    0 0 22px rgb(246 250 253 / 0.95),
+    0 0 6px rgb(246 250 253 / 0.9);
+}
+[data-path] [data-template='dolce-vita'] #invite-hero > span:nth-child(2) {
+  color: var(--c-gold-ink);
+}
+[data-path] [data-template='dolce-vita'] > header a {
+  border-color: color-mix(in srgb, var(--c-gold-ink) 55%, transparent);
+  background: color-mix(in srgb, var(--c-bg) 62%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Closing line and footer sit straight on the stage too. */
+[data-path] [data-template='dolce-vita'] main > section:last-child p {
+  color: var(--c-ink);
+  text-shadow:
+    0 0 24px rgb(246 250 253 / 0.98),
+    0 0 6px rgb(246 250 253 / 0.95);
+}
+[data-path] [data-template='dolce-vita'] > footer {
+  color: var(--c-ink);
+  text-shadow: 0 0 12px rgb(246 250 253 / 0.98);
+}
+[data-path] [data-template='dolce-vita'] > footer a {
+  color: var(--c-gold-ink);
+}
+
+/* Panels: airy paper with a powder-blue hairline and a scalloped awning edge along the top. */
+[data-template='dolce-vita'] main > section[data-reveal] > div.mx-auto:not(.bg-inv-band) {
+  position: relative;
+  box-shadow:
+    0 30px 60px -28px rgb(31 54 87 / 0.32),
+    0 0 0 1px color-mix(in srgb, var(--c-accent) 22%, transparent),
+    inset 0 0 0 6px var(--c-bg),
+    inset 0 0 0 7px color-mix(in srgb, var(--c-gold) 40%, transparent);
+}
+[data-template='dolce-vita'] main > section[data-reveal] > div.mx-auto:not(.bg-inv-band)::before {
+  content: '';
+  position: absolute;
+  inset: 0 2.25rem auto;
+  height: 0.7rem;
+  border-radius: 0 0 0.6rem 0.6rem;
+  background:
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--c-accent) 26%, var(--c-bg)) 0.5rem, transparent 0.53rem) 0 0 / 1.4rem 0.7rem repeat-x;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* The programme: each moment on its own pastel cloud (powder, rose, lemon, mint in turn). */
+[data-template='dolce-vita'] #programme span[data-draw-line],
+[data-template='dolce-vita'] #programme span[aria-hidden='true'].absolute.inset-y-1 {
+  opacity: 0.35;
+}
+[data-template='dolce-vita'] #programme ol {
+  --cloud: #e4effa;
+}
+[data-template='dolce-vita'] #programme li {
+  --cloud: #e4effa;
+  padding: 0.85rem 1.1rem 0.95rem;
+  border-radius: 1.6rem 1.9rem 1.5rem 2.1rem;
+  background:
+    radial-gradient(60% 90% at 22% 0%, rgb(255 255 255 / 0.85), transparent 70%),
+    var(--cloud);
+  box-shadow:
+    0 14px 26px -18px rgb(31 54 87 / 0.45),
+    inset 0 -6px 12px -8px rgb(31 54 87 / 0.12);
+}
+[data-template='dolce-vita'] #programme li:nth-child(4n + 2) {
+  --cloud: #f8e4ea;
+}
+[data-template='dolce-vita'] #programme li:nth-child(4n + 3) {
+  --cloud: #fbf2d6;
+}
+[data-template='dolce-vita'] #programme li:nth-child(4n + 4) {
+  --cloud: #e2f2ea;
+}
+/* Puffs on the cloud's top edge. */
+[data-template='dolce-vita'] #programme li::before,
+[data-template='dolce-vita'] #programme li::after {
+  content: '';
+  position: absolute;
+  top: -0.7rem;
+  width: 2.6rem;
+  height: 1.6rem;
+  border-radius: 999px 999px 0 0;
+  background: var(--cloud);
+  pointer-events: none;
+}
+[data-template='dolce-vita'] #programme li::before {
+  inset-inline-end: 1.4rem;
+}
+[data-template='dolce-vita'] #programme li::after {
+  inset-inline-end: 3.3rem;
+  top: -0.45rem;
+  width: 1.9rem;
+  height: 1.2rem;
+}
+[data-template='dolce-vita'] #programme li > span[aria-hidden='true'] {
+  top: 1.35rem;
+  border-radius: 999px;
+  transform: none;
+  background: var(--c-gold);
+  border-color: var(--c-gold-ink);
+}
+
+/* The countdown band: navy, with a faint shimmer of lake ripples. */
+[data-template='dolce-vita'] section[aria-labelledby='countdown-title'] > div {
+  background-image:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--c-accent) 38%, transparent), transparent 62%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='24' viewBox='0 0 80 24'%3E%3Cpath d='M0 12c10-6 20-6 30 0s20 6 30 0 14-5 20-3' fill='none' stroke='%23C9A96E' stroke-opacity='0.16' stroke-width='1.2'/%3E%3C/svg%3E");
+  background-size:
+    100% 100%,
+    80px 24px;
+}
