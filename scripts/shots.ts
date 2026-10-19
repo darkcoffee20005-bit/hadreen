@@ -45,8 +45,11 @@ async function main() {
   });
   await prisma.$disconnect();
 
-  const pages: { name: string; path: string; full?: boolean; admin?: boolean }[] = [
-    { name: 'home', path: '/', full: true },
+  // Long pages use per-section viewport shots: a full-page capture resizes the viewport, which
+  // stretches every svh-sized section.
+  const pages: { name: string; path: string; full?: boolean; admin?: boolean; section?: string; still?: boolean; wait?: number }[] = [
+    { name: 'home', path: '/?tier=medium', wait: 20_000 },
+    ...['try', 'designs', 'included', 'price', 'faq'].map((id) => ({ name: `home-${id}`, path: '/', section: id, still: true })),
     ...TEMPLATE_IDS.map((id) => ({ name: `invite-${id}`, path: `/i/demo-${id}`, full: true })),
     { name: 'invite-personal-hero', path: `/i/demo-royal-gold?g=${demo.guests[0]!.token}` },
     { name: 'invite-not-found', path: '/i/missing-invitation' },
@@ -74,9 +77,11 @@ async function main() {
         await logIn(page);
         loggedIn = true;
       }
-      await page.goto(base + p.path, { waitUntil: 'networkidle' });
+      await page.emulateMedia({ reducedMotion: p.still ? 'reduce' : 'no-preference' });
+      await page.goto(base + p.path, { waitUntil: p.wait ? 'load' : 'networkidle' });
       await page.evaluate(() => document.fonts.ready);
-      await page.waitForTimeout(p.name === 'admin-editor' ? 1200 : 300); // let the preview iframe render
+      if (p.section) await page.locator(`#${p.section}`).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await page.waitForTimeout(p.wait ?? (p.name === 'admin-editor' ? 1200 : 400)); // preview iframe, 3D hero
       const file = join(out, `${p.name}-${size.width}x${size.height}.png`);
       await page.screenshot({ path: file, fullPage: p.full ?? false });
       console.log(file);
