@@ -241,3 +241,38 @@ describe('globe land dots', () => {
     expect(latticePoint(0, 100).lat).toBeGreaterThan(80);
   });
 });
+
+describe('live thumbnails (mini stores)', () => {
+  it('loops the opening: play, hold the end, rewind, play again', async () => {
+    const { vi } = await import('vitest');
+    const { createMiniStore } = await import('@/lib/invite/machine');
+    vi.useFakeTimers();
+    const calls: string[] = [];
+    let done: (() => void) | null = null;
+    const intro: IntroController = {
+      duration: 8,
+      play: (onComplete) => {
+        calls.push('play');
+        done = onComplete;
+      },
+      skip: () => {},
+      seek: (t) => calls.push(`seek ${t}`),
+    };
+    const mini = createMiniStore('low', { hold: 1000, delay: 200 });
+    expect(mini.store.getState()).toMatchObject({ mode: 'mini', path: '3d', phase: 'opening', tier: 'low', tierLocked: true });
+    mini.store.getState().registerIntro(intro);
+    expect(calls).toEqual(['seek 0']);
+    vi.advanceTimersByTime(200);
+    expect(calls).toEqual(['seek 0', 'play']);
+    done!();
+    vi.advanceTimersByTime(1000);
+    expect(calls.at(-1)).toBe('seek 0');
+    vi.advanceTimersByTime(700);
+    expect(calls.at(-1)).toBe('play');
+    mini.dispose();
+    done!();
+    vi.advanceTimersByTime(5000);
+    expect(calls.filter((c) => c === 'play')).toHaveLength(2);
+    vi.useRealTimers();
+  });
+});
