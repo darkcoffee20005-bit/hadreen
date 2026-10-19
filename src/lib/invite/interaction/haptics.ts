@@ -1,5 +1,12 @@
+/** Off on pages that host scenes as decoration (the marketing hero's thumbnails). */
+let enabled = true;
+export function setHapticsEnabled(on: boolean) {
+  enabled = on;
+}
+
 /** Haptics where the platform has them (Android); a silent no-op elsewhere (iOS Safari). */
 function vibrate(pattern: number | number[]) {
+  if (!enabled) return;
   try {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(pattern);
   } catch {

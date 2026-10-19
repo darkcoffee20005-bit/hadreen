@@ -4,7 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, Vector3, type Points, type ShaderMaterial } from 'three';
 import { mulberry32 } from '../audio/dsp';
-import { inviteStore } from '../machine';
+import { useInvite, useInviteStore } from '../machine';
 import { scaledCount } from '../quality/tiers';
 
 const LIFE = 1.6;
@@ -17,7 +17,8 @@ export function Burst({ color = '#E8CC8C' }: { color?: string }) {
   const camera = useThree((s) => s.camera);
   const points = useRef<Points>(null);
   const material = useRef<ShaderMaterial>(null);
-  const count = scaledCount(160, inviteStore.getState().tier);
+  const store = useInviteStore();
+  const count = scaledCount(160, useInvite((s) => s.tier));
   const state = useRef({ started: -1, id: 0 });
 
   const { geometry, velocities } = useMemo(() => {
@@ -30,7 +31,7 @@ export function Burst({ color = '#E8CC8C' }: { color?: string }) {
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(({ clock }, delta) => {
-    const { burst } = inviteStore.getState();
+    const { burst } = store.getState();
     const p = points.current;
     if (!p || !material.current) return;
     const t = clock.elapsedTime;

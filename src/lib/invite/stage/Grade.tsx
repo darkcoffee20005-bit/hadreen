@@ -15,11 +15,13 @@ import { bakeGradeData, type GradeParams } from './grade';
  */
 export function Grade({ grade, bloomBoost = 1 }: { grade: GradeParams; bloomBoost?: number }) {
   const tier = useInvite((s) => s.tier);
+  const mini = useInvite((s) => s.mode === 'mini');
   const s = TIER_SETTINGS[tier];
   const lut = useMemo(() => new LookupTexture(bakeGradeData(grade, 32), 32), [grade]);
   useEffect(() => () => lut.dispose(), [lut]);
 
-  if (!s.post) return null;
+  // Thumbnails render into a texture; the composer would draw to the screen instead.
+  if (!s.post || mini) return null;
   // Mipmap blur already works down a resolution chain; fewer levels is the cheap setting.
   // (Its deprecated resolutionScale option corrupts the result at small sizes — don't pass it.)
   const effects = [

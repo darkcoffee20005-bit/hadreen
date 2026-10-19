@@ -1446,6 +1446,20 @@ Screenshots (§0).
 - **Convolver reverb** gets its impulse resampled to the context's rate (browsers reject a mismatched buffer); the opening never waits on audio.
 - **Playwright 1.56.1** (matches the sandbox's Chromium build).
 
+**Measured budget** (`pnpm budget`, production build, phone viewport, cache off; every template still on the test stage):
+
+| Template | Budget | 3D before intro | 2D before intro | Requests (3D) | Gate calls / tris | Content calls / tris |
+|---|---:|---:|---:|---:|---:|---:|
+| sacred-garden | 1200 KB | 1085 KB | 901 KB | 38 | 52 / 5517 | 43 / 12731 |
+| blossom-oud | 1400 KB | 1083 KB | 900 KB | 38 | 33 / 5289 | 24 / 12503 |
+| dolce-vita | 1300 KB | 1083 KB | 900 KB | 38 | 33 / 5289 | 24 / 12503 |
+| royal-gold | 1400 KB | 1084 KB | 901 KB | 38 | 33 / 5289 | 24 / 12503 |
+| eternal-romance | 1300 KB | 1083 KB | 899 KB | 38 | 33 / 5289 | 24 / 12503 |
+| destination-love | 1300 KB | 1083 KB | 899 KB | 38 | 33 / 5289 | 24 / 12503 |
+
+- 3D: ~1.08 MB before the intro can start, under the 1.6 MB target and well under the 2.5 MB cap.
+- 2D: ~0.9 MB was too much — the shell imported the 3D stage statically, so 2D guests downloaded three.js. The stage is now lazy (loaded in parallel with the scene chunk on the 3D path only). Fonts are the other big item (~360 KB: every Arabic and English face preloads); trimming that is on the Phase 5 list.
+
 **Known gaps (later phases)**
 - Every template still plays the engine test stage; bespoke scenes and 2D fallbacks arrive in Phase 3.
 - Placeholder music is synthesized; licensed tracks are a drop-in (`public/music/manifest.json`) once you choose them.

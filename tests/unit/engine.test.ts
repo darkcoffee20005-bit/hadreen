@@ -218,3 +218,26 @@ describe('lab tweaks', () => {
     expect(tweakStore.getState()).toMatchObject({ active: true, values: { 'key light': 200 } });
   });
 });
+
+describe('globe land dots', () => {
+  it('covers the land, not the sea, at every tier', async () => {
+    const { LAND_BITS } = await import('@/lib/land-dots.data');
+    const { landDots, latLonToVec3, latticePoint, LAND_LATTICE } = await import('@/lib/land-dots');
+    for (const tier of ['low', 'medium', 'high'] as const) {
+      const { positions, latLon } = landDots(LAND_BITS[tier], tier);
+      const share = latLon.length / 2 / LAND_LATTICE[tier];
+      expect(share).toBeGreaterThan(0.25); // land is ~29 % of the sphere
+      expect(share).toBeLessThan(0.33);
+      expect(positions.length).toBe((latLon.length / 2) * 3);
+    }
+    const near = (lat: number, lon: number) => {
+      const { latLon } = landDots(LAND_BITS.high, 'high');
+      for (let i = 0; i < latLon.length; i += 2) if (Math.abs(latLon[i]! - lat) < 2 && Math.abs(latLon[i + 1]! - lon) < 2) return true;
+      return false;
+    };
+    expect(near(33.3, 44.4)).toBe(true); // Baghdad
+    expect(near(0, -30)).toBe(false); // mid-Atlantic
+    expect(latLonToVec3(0, 0)).toEqual([0, 0, 1]);
+    expect(latticePoint(0, 100).lat).toBeGreaterThan(80);
+  });
+});

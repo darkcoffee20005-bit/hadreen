@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react';
 import { createStore, useStore } from 'zustand';
 import type { CaptureMoment } from './capture';
 import type { Reason2D } from './capability';
@@ -29,6 +30,8 @@ export interface IntroController {
 }
 
 export interface InviteState {
+  /** 'invite': the guest's invitation. 'mini': a live thumbnail (marketing hero) — no post, no sound. */
+  mode: 'invite' | 'mini';
   path: Path;
   reason2d: Reason2D | null;
   tier: Tier;
@@ -76,6 +79,7 @@ export interface InviteActions {
 }
 
 const initial: InviteState = {
+  mode: 'invite',
   path: 'pending',
   reason2d: null,
   tier: 'medium',
@@ -186,9 +190,58 @@ export function createInviteStore() {
 
 export type InviteStore = ReturnType<typeof createInviteStore>;
 
-/** One invitation per page, so one store per page. */
+/** The page's invitation. */
 export const inviteStore = createInviteStore();
 
+/**
+ * Scenes read their store from context, so one page can host several (the marketing hero runs
+ * each template as a live thumbnail with its own store). Outside a provider: the page's store.
+ * Inside scene code, always use these hooks — never import `inviteStore` directly.
+ */
+export const InviteStoreContext = createContext<InviteStore>(inviteStore);
+
+export function useInviteStore(): InviteStore {
+  return useContext(InviteStoreContext);
+}
+
 export function useInvite<T>(selector: (state: InviteState & InviteActions) => T): T {
-  return useStore(inviteStore, selector);
+  return useStore(useContext(InviteStoreContext), selector);
+}
+
+/**
+ * A store for a live thumbnail (marketing hero): 3D, low tier, no post, looping its opening —
+ * play, hold the final frame, rewind, play again. `delay` staggers thumbnails.
+ */
+export function createMiniStore(tier: Tier = 'low', { hold = 2600, delay = 0 } = {}) {
+  const store = createInviteStore();
+  store.setState({ mode: 'mini', path: '3d', tier, tierLocked: true, phase: 'opening' });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let current: IntroController | null = null;
+  const loop = (intro: IntroController) => {
+    if (intro !== current) return;
+    intro.play(() => {
+      timer = setTimeout(() => {
+        intro.seek(0);
+        timer = setTimeout(() => loop(intro), 700);
+      }, hold);
+    });
+  };
+  const unsubscribe = store.subscribe((s, prev) => {
+    if (s.intro === prev.intro) return;
+    clearTimeout(timer);
+    current = s.intro;
+    if (current) {
+      const intro = current;
+      intro.seek(0);
+      timer = setTimeout(() => loop(intro), delay);
+    }
+  });
+  return {
+    store,
+    dispose: () => {
+      clearTimeout(timer);
+      unsubscribe();
+      current = null;
+    },
+  };
 }

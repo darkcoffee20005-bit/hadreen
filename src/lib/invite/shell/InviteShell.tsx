@@ -17,12 +17,13 @@ import { haptics } from '../interaction/haptics';
 import { inviteStore, totalProgress, useInvite } from '../machine';
 import type { SceneProps } from '../scene-types';
 import { buildSceneView } from '../scene-view';
-import { Stage } from '../stage/Stage';
 import type { InviteView } from '../view';
 import { activateTweaks } from '../lab/tweaks';
 import { Gyro, MuteButton, SkipButton } from './Controls';
 import { GateAction } from './GateAction';
 
+// three.js and the renderer load only on the 3D path; 2D guests never download them.
+const Stage = dynamic(() => import('../stage/Stage').then((m) => m.Stage), { ssr: false });
 const LabPanel = dynamic(() => import('../lab/LabPanel'), { ssr: false });
 const LabPerf = dynamic(() => import('../lab/LabPerf'), { ssr: false });
 
@@ -72,8 +73,9 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
     void audio.prepare(view.wedding.musicTrack, (p) => store.setProgress('audio', p));
     if (path !== '3d') return;
     let cancelled = false;
-    SCENE_LOADERS[template.id]()
-      .then((mod) => {
+    // The scene chunk and the stage (three.js) download in parallel.
+    Promise.all([SCENE_LOADERS[template.id](), import('../stage/Stage')])
+      .then(([mod]) => {
         if (cancelled) return;
         setScene(() => mod.default);
         store.setProgress('chunk', 1);

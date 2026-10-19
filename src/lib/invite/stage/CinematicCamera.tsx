@@ -4,7 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import type { PerspectiveCamera } from 'three';
 import { startTiltSource, tilt } from '../interaction/tilt';
-import { inviteStore } from '../machine';
+import { useInviteStore } from '../machine';
 import { easeInOutCubic, evaluateTrack, framedPosition, lerpShot, type Shot, type TrackKey } from './rig';
 
 /**
@@ -33,11 +33,12 @@ export function CinematicCamera({ director }: { director: Director }) {
   const camera = useThree((s) => s.camera as PerspectiveCamera);
   const size = useThree((s) => s.size);
   const blend = useRef(0);
+  const store = useInviteStore();
 
   useEffect(() => startTiltSource(), []);
 
   useFrame((state, delta) => {
-    const { phase, scroll, capture } = inviteStore.getState();
+    const { phase, scroll, capture } = store.getState();
     const t = state.clock.elapsedTime;
     const aspect = size.width / Math.max(1, size.height);
     let shot: Shot;

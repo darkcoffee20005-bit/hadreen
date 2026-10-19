@@ -60,6 +60,7 @@
     "@eslint/eslintrc": "3.3.7",
     "@playwright/test": "1.56.1",
     "@tailwindcss/postcss": "4.3.3",
+    "@types/d3-geo": "^3.1.1",
     "@types/node": "22.20.5",
     "@types/papaparse": "5.5.2",
     "@types/pg": "8.23.1",
@@ -67,6 +68,9 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/three": "0.186.0",
+    "@types/topojson-client": "^3.1.5",
+    "@types/topojson-specification": "^1.0.5",
+    "d3-geo": "3.1.1",
     "dotenv": "18.0.8",
     "eslint": "9.39.5",
     "eslint-config-next": "15.5.28",
@@ -74,9 +78,11 @@
     "prisma": "7.10.1",
     "subset-font": "2.9.0",
     "tailwindcss": "4.3.3",
+    "topojson-client": "3.1.0",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "world-atlas": "2.0.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

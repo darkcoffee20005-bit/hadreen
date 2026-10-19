@@ -11,7 +11,7 @@ import { GoldArch } from '../kit/GoldArch';
 import { LightRays } from '../kit/LightRays';
 import { Sky } from '../kit/Sky';
 import { WaxSeal, type SealState } from '../kit/WaxSeal';
-import { inviteStore, useInvite } from '../machine';
+import { useInvite, useInviteStore } from '../machine';
 import { scaledCount, TIER_SETTINGS } from '../quality/tiers';
 import type { SceneProps } from '../scene-types';
 import { Burst } from '../stage/Burst';
@@ -41,6 +41,7 @@ const TRACK: TrackKey[] = [
 ];
 
 export default function TestStage({ view }: SceneProps) {
+  const store = useInviteStore();
   const tier = useInvite((s) => s.tier);
   const settings = TIER_SETTINGS[tier];
   const p = view.palette;
@@ -117,7 +118,7 @@ export default function TestStage({ view }: SceneProps) {
   useFrame((state, delta) => {
     const a = anim.current;
     const t = state.clock.elapsedTime;
-    const { phase, capture } = inviteStore.getState();
+    const { phase, capture } = store.getState();
     seal.current.glint = (t * 0.25) % 1;
 
     if (envGroup.current) {

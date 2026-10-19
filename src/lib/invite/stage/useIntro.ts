@@ -2,7 +2,7 @@
 
 import gsap from 'gsap';
 import { useEffect } from 'react';
-import { inviteStore } from '../machine';
+import { useInviteStore } from '../machine';
 
 /**
  * Registers a scene's opening as a GSAP timeline the shell can play, skip and seek.
@@ -10,6 +10,7 @@ import { inviteStore } from '../machine';
  * use tl.call() only for sound and haptics (those are suppressed on skip and seek).
  */
 export function useIntro(build: (tl: gsap.core.Timeline) => void, deps: React.DependencyList) {
+  const store = useInviteStore();
   useEffect(() => {
     const tl = gsap.timeline({ paused: true });
     build(tl);
@@ -21,7 +22,7 @@ export function useIntro(build: (tl: gsap.core.Timeline) => void, deps: React.De
     };
     tl.eventCallback('onComplete', finish);
 
-    inviteStore.getState().registerIntro({
+    store.getState().registerIntro({
       duration: tl.duration(),
       play: (onComplete) => {
         onDone = onComplete;
@@ -39,8 +40,8 @@ export function useIntro(build: (tl: gsap.core.Timeline) => void, deps: React.De
     });
     return () => {
       tl.kill();
-      inviteStore.getState().registerIntro(null);
+      store.getState().registerIntro(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [store, ...deps]);
 }

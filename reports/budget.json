@@ -1,0 +1,132 @@
+{
+  "measuredAt": "2026-10-19T04:46:16.857Z",
+  "base": "http://localhost:3100",
+  "rows": [
+    {
+      "template": "sacred-garden",
+      "budgetKB": 1200,
+      "kb3d": 1085,
+      "kb2d": 901,
+      "requests3d": 38,
+      "gate": {
+        "calls": 52,
+        "triangles": 5517,
+        "geometries": 24,
+        "textures": 32,
+        "programs": 31
+      },
+      "content": {
+        "calls": 43,
+        "triangles": 12731,
+        "geometries": 31,
+        "textures": 32,
+        "programs": 33
+      }
+    },
+    {
+      "template": "blossom-oud",
+      "budgetKB": 1400,
+      "kb3d": 1083,
+      "kb2d": 900,
+      "requests3d": 38,
+      "gate": {
+        "calls": 33,
+        "triangles": 5289,
+        "geometries": 24,
+        "textures": 32,
+        "programs": 31
+      },
+      "content": {
+        "calls": 24,
+        "triangles": 12503,
+        "geometries": 31,
+        "textures": 32,
+        "programs": 33
+      }
+    },
+    {
+      "template": "dolce-vita",
+      "budgetKB": 1300,
+      "kb3d": 1083,
+      "kb2d": 900,
+      "requests3d": 38,
+      "gate": {
+        "calls": 33,
+        "triangles": 5289,
+        "geometries": 24,
+        "textures": 32,
+        "programs": 31
+      },
+      "content": {
+        "calls": 24,
+        "triangles": 12503,
+        "geometries": 31,
+        "textures": 32,
+        "programs": 33
+      }
+    },
+    {
+      "template": "royal-gold",
+      "budgetKB": 1400,
+      "kb3d": 1084,
+      "kb2d": 901,
+      "requests3d": 38,
+      "gate": {
+        "calls": 33,
+        "triangles": 5289,
+        "geometries": 24,
+        "textures": 32,
+        "programs": 31
+      },
+      "content": {
+        "calls": 24,
+        "triangles": 12503,
+        "geometries": 31,
+        "textures": 32,
+        "programs": 33
+      }
+    },
+    {
+      "template": "eternal-romance",
+      "budgetKB": 1300,
+      "kb3d": 1083,
+      "kb2d": 899,
+      "requests3d": 38,
+      "gate": {
+        "calls": 33,
+        "triangles": 5289,
+        "geometries": 24,
+        "textures": 32,
+        "programs": 31
+      },
+      "content": {
+        "calls": 24,
+        "triangles": 12503,
+        "geometries": 31,
+        "textures": 32,
+        "programs": 33
+      }
+    },
+    {
+      "template": "destination-love",
+      "budgetKB": 1300,
+      "kb3d": 1083,
+      "kb2d": 899,
+      "requests3d": 38,
+      "gate": {
+        "calls": 33,
+        "triangles": 5289,
+        "geometries": 24,
+        "textures": 32,
+        "programs": 31
+      },
+      "content": {
+        "calls": 24,
+        "triangles": 12503,
+        "geometries": 31,
+        "textures": 32,
+        "programs": 33
+      }
+    }
+  ]
+}

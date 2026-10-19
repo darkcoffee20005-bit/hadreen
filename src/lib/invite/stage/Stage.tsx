@@ -55,12 +55,16 @@ function FrameDriver() {
   useEffect(() => {
     let raf = 0;
     let last = 0;
+    let readyFrames = 0;
     // Count every pass of a frame (scene + post), not just the composer's last quad.
     gl.info.autoReset = false;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (document.hidden) return;
-      const { phase, tier, lastInteraction } = inviteStore.getState();
+      const { phase, tier, lastInteraction, capture } = inviteStore.getState();
+      // Capture mode: once the moment is published, hold the frame still so a screenshot or a
+      // video frame never reads a half-drawn buffer.
+      if (capture && window.__hadreen?.ready && ++readyFrames > 3) return;
       const idle = phase === 'content' && now - lastInteraction > 1500;
       const fps = idle ? TIER_SETTINGS[tier].idleFps : 0;
       if (fps && now - last < 1000 / fps - 2) return;
