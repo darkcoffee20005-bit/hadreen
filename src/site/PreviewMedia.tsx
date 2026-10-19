@@ -31,7 +31,6 @@ export function PreviewMedia({ template, className = '' }: { template: TemplateM
   return (
     <span className={`relative block overflow-hidden rounded-[1.6rem] border border-gold/50 bg-emerald-deep shadow-2xl shadow-black/30 ${className}`}>
       <video ref={video} muted loop playsInline preload="none" poster={`/previews/${template.id}.jpg`} className="size-full object-cover" aria-hidden="true">
-        <source src={`/previews/${template.id}.webm`} type="video/webm" />
         <source src={`/previews/${template.id}.mp4`} type="video/mp4" />
       </video>
     </span>

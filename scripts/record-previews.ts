@@ -1,7 +1,7 @@
 /**
  * Records each design's opening for the marketing site: frame by frame at 390×844, with the
  * engine's video capture clock (?capture=video), so headless software rendering can't stutter.
- * ffmpeg encodes an MP4 (H.264, faststart), a WebM (VP9) and a poster into public/previews/, and
+ * ffmpeg encodes an MP4 (H.264, faststart; smaller than VP9 at equal quality here) and a poster into public/previews/, and
  * src/site/previews.data.ts lists the designs that have one.
  *
  *   pnpm previews [template…]          # against PREVIEWS_BASE_URL (default http://localhost:3100)
@@ -49,7 +49,6 @@ async function record(id: string, browser: Awaited<ReturnType<typeof chromium.la
   const input = join(dir, 'f%04d.png');
   const ff = (args: string[]) => execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: 'inherit' });
   ff(['-framerate', String(FPS), '-i', input, '-c:v', 'libx264', '-preset', 'slow', '-crf', '27', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(out, `${id}.mp4`)]);
-  ff(['-framerate', String(FPS), '-i', input, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '40', '-row-mt', '1', '-deadline', 'good', join(out, `${id}.webm`)]);
   const posterFrame = Math.round((GATE_HOLD + duration * 0.8) * FPS);
   ff(['-i', join(dir, `f${String(Math.min(total - 1, posterFrame)).padStart(4, '0')}.png`), '-q:v', '4', join(out, `${id}.jpg`)]);
   await rm(dir, { recursive: true, force: true });
