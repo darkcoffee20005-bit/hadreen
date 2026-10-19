@@ -13,7 +13,7 @@
 - [x] **Phase 2**: shared invitation engine (`src/lib/invite`) plus an engine test stage
 - [x] **Phase 3**: the six templates *(you asked me to carry on through every phase, so the 3a review checkpoint is folded in: all six are built together)*
 - [x] **Phase 4**: marketing website (`/`), preview videos, SEO
-- [ ] **Phase 5**: polish, QA and docs
+- [x] **Phase 5**: polish, QA and docs
 
 **Steps at the end of every phase:**
 1. `pnpm lint`, `pnpm typecheck`, `pnpm test` (Vitest), `pnpm e2e` (Playwright).
@@ -1513,3 +1513,22 @@ Every opening is a pure function of its time (`timeline.ts`), so skip, seek, cap
 - Preview videos are MP4 only: VP9 came out larger than H.264 at the same quality for this content.
 - The phone is CSS-3D around a real iframe (a WebGL phone can't host an iframe).
 - **FAQ**: only answers true of the product today. Delivery time, number of edits, link lifetime, payment methods, changes after publishing and the occasions you cover still need your answers (decision 6).
+
+### Phase 5: polish, QA and docs (done, with the limits below)
+
+**Delivered**
+- Lighthouse (mobile, simulated slow 4G, production build): `/` performance 79, accessibility 100, best practices 100, SEO 100; invitations performance 82–83, accessibility 100, best practices 100. CLS ≈ 0 everywhere.
+  - Sound synthesis moved to a Web Worker (invitation blocking time ~1.8 s → ~0.2 s).
+  - The 3D stage is lazy (2D guests: 616 KB before the gate, was 900 KB); only Arabic font subsets preload, unused weights dropped.
+  - Hero posters are server-rendered with the front one preloaded; metadata always in `<head>`; favicon.
+- Fixes found in QA: R3F clock units, opaque thumbnail clears, reduced motion stopping infinite loops, readable hero over Royal Gold's frieze, Destination Love's pass clear of the names.
+- Docs: README (setup, scripts, engine, adding a template), DEPLOY.md (Vercel + Neon), LICENSES.md (fonts, Natural Earth, detect-gpu, synthesized sound, procedural art).
+- Checks at the end: lint and typecheck clean, 198 Vitest, 16 Playwright, budget under the cap for all six templates.
+
+**Not verifiable in this container (to do on real devices)**
+- Performance ≥ 85 on Lighthouse mobile: 79–83 measured here on a shared 4-core container; the remaining gap is LCP from font and image download on the simulated network. Next steps if real-device numbers agree: self-host smaller Arabic subsets, and serve posters as AVIF.
+- 50+ fps on the medium tier with CPU throttling and the browser matrix (iOS Safari 17+, Chrome Android, desktop Chrome/Safari/Firefox): this container only has software WebGL (SwiftShader), so frame rates here mean nothing. The tier system steps down live if frames drop; check each template once on a mid-range Android phone and an iPhone.
+- Heavy scenes to watch on phones: Dolce Vita (~285k triangles on medium) and Sacred Garden (~135k). If they drop frames, cut rose petal layers and mountain grid resolution first.
+
+**Waiting on you**
+- FAQ facts (decision 6), licensed music (decision 13), a GitHub repository to push to, and — when you're ready to sell — Vercel Pro, Neon and (optionally) Upstash, following DEPLOY.md.
