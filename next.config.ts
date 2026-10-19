@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Lets a production build (e2e, screenshots, budget) live beside the dev server's .next.
   distDir: process.env.NEXT_DIST_DIR || '.next',
   reactStrictMode: true,
+  // Metadata (title, description, share tags) is always in <head>, for every client: link
+  // previews in chat apps don't all identify as bots.
+  htmlLimitedBots: /.*/,
   poweredByHeader: false,
   // The app has two root layouts ((site) and (invite)), so unmatched URLs need a global 404.
   experimental: { globalNotFound: true },
