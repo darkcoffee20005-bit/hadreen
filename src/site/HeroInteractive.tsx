@@ -36,7 +36,10 @@ export function HeroInteractive({ views, children }: { views: SceneView[]; child
     let cancelled = false;
     const run = () =>
       detectCapability(window.location.search).then((cap) => {
-        if (cancelled || cap.path !== '3d') return;
+        // Six live scenes at once are a desktop luxury: phones and tablets keep the posters
+        // (each design still opens in full 3D on its own page).
+        const desktop = window.matchMedia('(min-width: 1024px) and (pointer: fine)').matches;
+        if (cancelled || cap.path !== '3d' || !desktop || cap.tier === 'low') return;
         setStage({ mode: '3d', tier: cap.tier });
         window.setTimeout(() => !cancelled && setPostersShown(false), 2200);
       });
