@@ -12,7 +12,9 @@ import { SECRET_LENGTH, TOKEN_ALPHABET, TOKEN_LENGTH } from '../src/lib/validati
 import { TEMPLATES } from '../src/templates';
 import type { TemplateId } from '../src/lib/invite/types';
 
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL! }),
+});
 const token = customAlphabet(TOKEN_ALPHABET, TOKEN_LENGTH);
 const secret = customAlphabet(TOKEN_ALPHABET, SECRET_LENGTH);
 
@@ -151,6 +153,11 @@ const ANSWERS: [boolean, number, string][] = [
 const OPENED_ONLY = 2; // guests after the answers who opened but haven't replied
 
 async function main() {
+  // `--if-missing` (used by the deploy build): seed only a fresh database, never reset demos.
+  if (process.argv.includes('--if-missing') && (await prisma.wedding.count({ where: { isDemo: true } })) > 0) {
+    console.log('Demo weddings already exist; nothing to do.');
+    return;
+  }
   await prisma.wedding.deleteMany({ where: { isDemo: true } });
   const { date, deadline } = demoSchedule(new Date());
   const lines: string[] = [];

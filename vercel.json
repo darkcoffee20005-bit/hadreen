@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["fra1"],
-  "buildCommand": "pnpm prisma migrate deploy && pnpm build"
+  "regions": [
+    "fra1"
+  ],
+  "buildCommand": "pnpm prisma migrate deploy && pnpm tsx prisma/seed.ts --if-missing && pnpm build"
 }

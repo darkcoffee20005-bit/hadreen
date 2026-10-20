@@ -11,6 +11,6 @@ export default defineConfig({
   // endpoint (PgBouncer, transaction mode) can't hold migration locks. The app itself always
   // uses DATABASE_URL (src/lib/db.ts).
   datasource: {
-    url: process.env.DIRECT_DATABASE_URL || env('DATABASE_URL'),
+    url: process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL_UNPOOLED || env('DATABASE_URL'),
   },
 });

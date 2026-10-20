@@ -2,7 +2,9 @@ import 'server-only';
 
 /** Public origin used in links, share messages, OG images and the sitemap. Read at runtime. */
 export function siteUrl(): string {
-  return (process.env.SITE_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  // On Vercel without a custom domain yet, fall back to the project's production URL.
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  return (process.env.SITE_URL || (vercel ? `https://${vercel}` : 'http://localhost:3000')).replace(/\/+$/, '');
 }
 
 export function requireEnv(name: 'DATABASE_URL' | 'ADMIN_PASSWORD' | 'SESSION_SECRET'): string {
