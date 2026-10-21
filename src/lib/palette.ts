@@ -66,7 +66,7 @@ export function resolvePalette(meta: TemplateMeta, overrides: unknown): PaletteT
   const o = readOverrides(overrides);
   const variant = meta.paletteVariants.find((v) => v.id === o.variant);
   const { variant: _ignored, ...colours } = o;
-  return { ...meta.palette, ...variant?.tokens, ...colours };
+  return { ...meta.palette, ...variant?.tokens, ...colours, scene: { ...meta.palette.scene, ...variant?.scene } };
 }
 
 /** CSS custom properties consumed by Tailwind's `inv-*` colours (see globals.css). */

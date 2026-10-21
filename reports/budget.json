@@ -1,33 +1,33 @@
 {
-  "measuredAt": "2026-10-21T02:49:23.656Z",
+  "measuredAt": "2026-10-21T22:22:09.259Z",
   "base": "http://localhost:3100",
   "rows": [
     {
       "template": "sacred-garden",
       "budgetKB": 1200,
-      "kb3d": 994,
-      "kb2d": 523,
-      "requests3d": 48,
+      "kb3d": 996,
+      "kb2d": 522,
+      "requests3d": 47,
       "gate": {
         "calls": 52,
-        "triangles": 105311,
-        "geometries": 44,
-        "textures": 32,
-        "programs": 51
+        "triangles": 129983,
+        "geometries": 47,
+        "textures": 31,
+        "programs": 63
       },
       "content": {
-        "calls": 61,
-        "triangles": 107743,
-        "geometries": 45,
-        "textures": 32,
-        "programs": 53
+        "calls": 42,
+        "triangles": 132187,
+        "geometries": 41,
+        "textures": 25,
+        "programs": 55
       }
     },
     {
       "template": "blossom-oud",
       "budgetKB": 1400,
-      "kb3d": 991,
-      "kb2d": 521,
+      "kb3d": 990,
+      "kb2d": 520,
       "requests3d": 42,
       "gate": {
         "calls": 24,
@@ -47,15 +47,15 @@
     {
       "template": "dolce-vita",
       "budgetKB": 1300,
-      "kb3d": 985,
-      "kb2d": 522,
+      "kb3d": 984,
+      "kb2d": 521,
       "requests3d": 40,
       "gate": {
         "calls": 67,
         "triangles": 283263,
         "geometries": 45,
         "textures": 33,
-        "programs": 51
+        "programs": 50
       },
       "content": {
         "calls": 79,
@@ -68,8 +68,8 @@
     {
       "template": "royal-gold",
       "budgetKB": 1400,
-      "kb3d": 990,
-      "kb2d": 522,
+      "kb3d": 989,
+      "kb2d": 521,
       "requests3d": 42,
       "gate": {
         "calls": 61,
@@ -89,8 +89,8 @@
     {
       "template": "eternal-romance",
       "budgetKB": 1300,
-      "kb3d": 985,
-      "kb2d": 521,
+      "kb3d": 984,
+      "kb2d": 520,
       "requests3d": 45,
       "gate": {
         "calls": 46,
@@ -110,8 +110,8 @@
     {
       "template": "destination-love",
       "budgetKB": 1300,
-      "kb3d": 1014,
-      "kb2d": 521,
+      "kb3d": 1013,
+      "kb2d": 520,
       "requests3d": 43,
       "gate": {
         "calls": 30,

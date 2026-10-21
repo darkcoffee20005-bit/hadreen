@@ -2,8 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { evaluateTrack, framedPosition } from '@/lib/invite/stage/rig';
 import { buildRose, buildSwan, grid, HEAD } from '@/templates/sacred-garden/geometry';
 import {
+  allRoses,
   ambientShot,
   ARCH,
+  ARCH_AT,
+  bouquetLayout,
+  chainTop,
+  heroShot,
+  LANTERNS,
+  openingOutline,
+  RAIL,
+  strandLayout,
   archApex,
   archArc,
   archCentreline,
@@ -79,13 +88,13 @@ describe('pointed arch', () => {
 });
 
 describe('roses', () => {
-  it('are seeded, above the water, and none hang into the opening at the crown', () => {
+  it('are seeded, off the floor, and none hang into the opening at the crown', () => {
     const a = roseLayout(120);
     expect(a).toEqual(roseLayout(120));
     expect(a).toHaveLength(120);
     const innerApex = archApex(ARCH.a);
     for (const r of a) {
-      expect(r.position[1]).toBeGreaterThan(0.4);
+      expect(r.position[1]).toBeGreaterThan(0.25);
       expect(Math.hypot(...r.facing)).toBeCloseTo(1, 6);
       const [x, y] = r.position;
       if (y > ARCH.spring + 0.9) {
@@ -98,6 +107,42 @@ describe('roses', () => {
     }
   });
 
+  it('bouquets face outward from their centre and the set includes the urns and bushes', () => {
+    const b = bouquetLayout([1, 2, 3], 0.4, 20, 7);
+    for (const r of b) {
+      const d: [number, number, number] = [r.position[0] - 1, r.position[1] - 2, r.position[2] - 3];
+      expect(d[0] * r.facing[0] + d[1] * r.facing[1] + d[2] * r.facing[2]).toBeGreaterThan(0);
+    }
+    expect(allRoses(50, 10, 12)).toHaveLength(50 + 20 + 24);
+  });
+});
+
+describe('the loggia and terrace', () => {
+  it('the opening sits inside the arch ring and stands on the floor', () => {
+    const open = openingOutline(24);
+    expect(open[0]).toEqual([-ARCH.a, 0]);
+    expect(open[open.length - 1]).toEqual([ARCH.a, 0]);
+    expect(Math.max(...open.map(([, y]) => y))).toBeLessThanOrEqual(archApex(ARCH.a) + 1e-9);
+    expect(polygonArea(open)).toBeGreaterThan(ARCH.a * 2 * ARCH.spring);
+  });
+
+  it('hanging lanterns hang under the arch on a chain; standing ones are on the floor between the arch and the rail', () => {
+    for (const l of LANTERNS) {
+      if (l.hanging) expect(chainTop(l.at[0])).toBeGreaterThan(l.at[1]);
+      else {
+        expect(l.at[1]).toBeCloseTo(ARCH_AT[1], 6);
+        expect(l.at[2]).toBeGreaterThan(RAIL.z);
+        expect(l.at[2]).toBeLessThan(ARCH.z);
+      }
+    }
+  });
+
+  it('trailing strands hang down from the inner arc', () => {
+    for (const pts of strandLayout(12)) {
+      for (let k = 1; k < pts.length; k++) expect(pts[k]![1]).toBeLessThan(pts[k - 1]![1]);
+      expect(pts[pts.length - 1]![1]).toBeGreaterThan(ARCH.spring - 1);
+    }
+  });
 });
 
 describe('swans', () => {
@@ -106,7 +151,7 @@ describe('swans', () => {
       const start = swanPlacement(side, 0);
       const end = swanPlacement(side, 1);
       expect(start.x).toBeCloseTo(side * SWANS.startX, 6);
-      expect(Math.abs(start.x)).toBeLessThan(3.0 - 0.4); // inside the pool
+      expect(Math.abs(start.x)).toBeLessThan(12); // still in view on wide screens
       expect(end.x).toBeCloseTo(side * SWANS.meetX, 6);
       expect(end.z).toBeCloseTo(SWANS.z, 6);
       expect(Math.cos(end.heading)).toBeCloseTo(-side, 6);
@@ -187,12 +232,12 @@ describe('camera', () => {
     expect(VEIL.in).toBeLessThan(VEIL.full);
   });
 
-  it('the track runs 8 s, ends on S3 and never dips under the water', () => {
+  it('the track runs 8 s, ends on the hero shot and never dips under the water', () => {
     for (const aspect of [PHONE, DESKTOP]) {
       const track = buildTrack(envelopeSize(aspect));
       expect(track[0]!.at).toBe(0);
       expect(track[track.length - 1]!.at).toBe(8);
-      expect(track[track.length - 1]!.shot).toBe(S3);
+      expect(track[track.length - 1]!.shot).toBe(heroShot(aspect < 0.85));
       track.slice(1).forEach((k, i) => expect(k.at).toBeGreaterThan(track[i]!.at));
       for (let t = 0; t <= 8; t += 0.1) {
         const pos = framedPosition(evaluateTrack(track, t), aspect);
@@ -201,7 +246,7 @@ describe('camera', () => {
     }
   });
 
-  it('the ambient shot starts at S3 and cranes up with the scroll', () => {
+  it('the ambient shot starts at the hero and tilts up into the sky with the scroll', () => {
     expect(ambientShot(0, 0)).toEqual({ ...S3, position: [0, S3.position[1], S3.position[2]] });
     expect(ambientShot(1, 0).target[1]).toBeGreaterThan(S3.target[1] + 6);
     expect(ambientShot(0.5, 0).position[1]).toBeGreaterThan(S3.position[1]);

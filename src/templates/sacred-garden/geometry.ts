@@ -5,24 +5,19 @@
  * with position / normal / uv / color, so related parts merge into a single draw call.
  */
 import {
-  BoxGeometry,
   BufferAttribute,
   BufferGeometry,
   CatmullRomCurve3,
   Color,
   CylinderGeometry,
-  ExtrudeGeometry,
   LatheGeometry,
-  Path,
-  Shape,
-  ShapeGeometry,
   SphereGeometry,
   TubeGeometry,
   Vector2,
   Vector3,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ARCH, archOutline, POOL, rng, smoothstep, SWAN_SCALE, vinePath, type V3 } from './layout';
+import { rng, smoothstep, SWAN_SCALE, vinePath, type V3 } from './layout';
 
 export type Detail = 'low' | 'medium' | 'high';
 type RGB = [number, number, number];
@@ -127,93 +122,6 @@ export function curve(keys: [number, number][], t: number): number {
 // ---------------------------------------------------------------------------------------------
 // stone
 
-/** The pointed arch, its pillars, imposts and plinths (which stand in the water). */
-export function buildArch(stone: string, pond: string, detail: Detail): BufferGeometry {
-  const { a, t, spring, depth } = ARCH;
-  const shape = new Shape(archOutline(detail === 'low' ? 14 : 26).map(([x, y]) => new Vector2(x, y)));
-  const ring = new ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: detail === 'low' ? 1 : 2, curveSegments: 4 });
-  ring.translate(0, 0, -depth / 2);
-  const parts: BufferGeometry[] = [ring];
-  for (const side of [-1, 1]) {
-    const x = side * (a + t / 2);
-    const impost = new BoxGeometry(t + 0.12, 0.09, depth + 0.1);
-    impost.translate(x, spring - 0.02, 0);
-    const cap = new BoxGeometry(t + 0.07, 0.05, depth + 0.05);
-    cap.translate(x, spring - 0.09, 0);
-    const plinth = new BoxGeometry(t + 0.18, 0.62, depth + 0.16);
-    plinth.translate(x, 0.0, 0);
-    const plinthCap = new BoxGeometry(t + 0.12, 0.06, depth + 0.1);
-    plinthCap.translate(x, 0.34, 0);
-    parts.push(impost, cap, plinth, plinthCap);
-  }
-  const g = merge(parts);
-  const base = lin(stone);
-  const wet = lin(pond, 0.55);
-  return paint(g, (x, y, z) => {
-    const n = noise3(x * 3.1, y * 3.1, z * 3.1);
-    const grime = 1 - smoothstep(0.0, 0.4, y);
-    const k = 0.92 + n * 0.14 - (1 - smoothstep(-0.02, 0.06, y)) * 0.18;
-    return [0, 1, 2].map((i) => (base[i]! * (1 - grime * 0.3) + wet[i]! * grime * 0.3) * k) as RGB;
-  });
-}
-
-/** The pool's stone deck and raised coping, in one geometry. */
-export function buildDeck(stone: string): BufferGeometry {
-  const { x, zNear, zFar, coping, deck } = POOL;
-  const rect = (hx: number, z0: number, z1: number) => {
-    // Shape space: (x, -z) so that rotateX(-π/2) lands it in the XZ plane.
-    const s = new Path();
-    s.moveTo(-hx, -z0);
-    s.lineTo(hx, -z0);
-    s.lineTo(hx, -z1);
-    s.lineTo(-hx, -z1);
-    s.closePath();
-    return s;
-  };
-  const outer = new Shape(rect(x + coping + deck, zNear + coping + deck, zFar - coping - deck).getPoints());
-  outer.holes.push(rect(x + coping, zNear + coping, zFar - coping));
-  const floor = new ShapeGeometry(outer);
-  floor.rotateX(-Math.PI / 2);
-  floor.translate(0, 0.1, 0);
-  const lip = new Shape(rect(x + coping, zNear + coping, zFar - coping).getPoints());
-  lip.holes.push(rect(x, zNear, zFar));
-  const copingGeo = new ExtrudeGeometry(lip, { depth: 0.2, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 1 });
-  copingGeo.rotateX(-Math.PI / 2);
-  copingGeo.translate(0, -0.06, 0);
-  const g = merge([floor, copingGeo]);
-  const base = lin(stone);
-  return paint(g, (px, py, pz) => {
-    const tile = (Math.floor(px / 0.6) + Math.floor(pz / 0.6)) % 2 === 0 ? 1 : 0.94;
-    // The far end fades a little into the morning haze.
-    const shade = 1 - 0.12 * smoothstep(zFar + 1.4, zFar - 0.2, pz);
-    const k = (py > 0.12 ? 0.92 : 0.78 * tile) * shade * (0.92 + noise3(px * 2, 0, pz * 2) * 0.12);
-    return [base[0] * k, base[1] * k, base[2] * k];
-  });
-}
-
-/** Lawn around the deck: a big plane with the pool and deck cut out. */
-export function buildLawn(): BufferGeometry {
-  const { x, zNear, zFar, coping, deck } = POOL;
-  const s = new Shape();
-  s.moveTo(-40, 40);
-  s.lineTo(40, 40);
-  s.lineTo(40, -40);
-  s.lineTo(-40, -40);
-  s.closePath();
-  const hx = x + coping + deck - 0.02;
-  const h = new Path();
-  h.moveTo(-hx, -(zNear + coping + deck - 0.02));
-  h.lineTo(hx, -(zNear + coping + deck - 0.02));
-  h.lineTo(hx, -(zFar - coping - deck + 0.02));
-  h.lineTo(-hx, -(zFar - coping - deck + 0.02));
-  h.closePath();
-  s.holes.push(h);
-  const g = new ShapeGeometry(s);
-  g.rotateX(-Math.PI / 2);
-  g.translate(0, 0.09, 0);
-  return paint(g, () => [1, 1, 1]);
-}
-
 // ---------------------------------------------------------------------------------------------
 // roses & greenery
 
@@ -281,7 +189,7 @@ export function buildVines(color: string, detail: Detail): BufferGeometry {
   const seg = detail === 'low' ? 120 : 260;
   const parts = [0, 2.4].map((phase, i) => {
     const pts = vinePath(phase, 8 + i * 1.5, seg).map(([x, y, z]) => new Vector3(x, y, z));
-    return new TubeGeometry(new CatmullRomCurve3(pts), seg, 0.0075 - i * 0.0015, detail === 'low' ? 3 : 4, false);
+    return new TubeGeometry(new CatmullRomCurve3(pts), seg, 0.015 - i * 0.004, detail === 'low' ? 3 : 4, false);
   });
   const c = lin(color);
   return paint(merge(parts), (x, y, z) => {

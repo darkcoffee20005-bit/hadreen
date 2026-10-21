@@ -3,26 +3,26 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { BackSide, HalfFloatType, Matrix4, PerspectiveCamera, Plane, ShaderMaterial, Vector3, Vector4, WebGLRenderTarget, type Mesh } from 'three';
-import { POOL } from '../layout';
+import { LAKE } from '../layout';
 import { SKY_FRAG, SKY_VERT, WATER_FRAG, WATER_VERT, type SkyUniforms, type WaterUniforms } from '../shaders';
 
-/** Golden-hour sky dome (one draw call); its colour function is shared with the water. */
+/** Sunset sky dome (one draw call); its colour function is shared with the water. */
 export function SkyDome({ uniforms }: { uniforms: SkyUniforms }) {
   const material = useMemo(() => new ShaderMaterial({ uniforms, vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: BackSide, depthWrite: false, fog: false }), [uniforms]);
   useEffect(() => () => material.dispose(), [material]);
   return (
     <mesh material={material} renderOrder={-10} frustumCulled={false}>
-      <sphereGeometry args={[90, 32, 16]} />
+      <sphereGeometry args={[400, 48, 24]} />
     </mesh>
   );
 }
 
-const W = POOL.x * 2;
-const D = POOL.zNear - POOL.zFar;
-const CZ = (POOL.zNear + POOL.zFar) / 2;
+const W = LAKE.half * 2;
+const D = LAKE.zNear - LAKE.zFar;
+const CZ = (LAKE.zNear + LAKE.zFar) / 2;
 
 /**
- * The still pond. `reflection` > 0 (high tier): one surface sampling a real planar reflection
+ * The still lake. `reflection` > 0 (high tier): one surface sampling a real planar reflection
  * (a mirrored camera renders the scene into a target each frame). Otherwise the scene draws a
  * mirrored copy of the garden under the water, and the pond is two cheap layers: the reflected
  * sky beneath it and a tinted film with ripples, wakes and sun glints over it.
