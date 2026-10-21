@@ -2,45 +2,77 @@
 
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { BackSide, BoxGeometry, FrontSide, MeshPhysicalMaterial, MeshStandardMaterial, Vector2, type BufferGeometry, type Group } from 'three';
+import {
+  AdditiveBlending,
+  BackSide,
+  CanvasTexture,
+  Color,
+  FrontSide,
+  MeshBasicMaterial,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  PlaneGeometry,
+  SRGBColorSpace,
+  Vector2,
+  type BufferGeometry,
+  type Group,
+  type Mesh,
+} from 'three';
 import { mixHex } from '@/lib/invite/stage/color';
-import { cssFontFamily, heightToNormal, monogramHeight, tintFromHeight } from '@/lib/invite/stage/textures';
-import { envelopeBodyMaps, envelopeFlapMaps } from '../art';
+import { canvas, cssFontFamily, heightToNormal, monogramHeight, tintFromHeight } from '@/lib/invite/stage/textures';
+import { envelopeMaps } from '../art';
 import { grid } from '../geometry';
-import { SEAL_SEEDS, sealRim, shardMotion } from '../layout';
+import { FLAPS, SEAL_SEEDS, sealRim, shardMotion, type FlapId } from '../layout';
 
 export interface EnvelopeAnim {
-  /** 0 closed … 1 open (curls up over the top). */
-  flap: number;
+  /** 0..1 the seal warms and glows before it gives. */
+  glow: number;
   /** 0 whole … 1 the four shards have fallen away. */
   crack: number;
+  /** Each flap: 0 closed … 1 folded open outwards. */
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  /** 0..1 warm light spilling from inside the open envelope. */
+  light: number;
+  /** 0..1 the whole envelope dissolves into the light. */
+  fade: number;
   /** 0..1 position of the glint sweeping the seal. */
   glint: number;
 }
 
-const FLAP_COLS = 12;
-const FLAP_ROWS = 18;
+export const ENVELOPE_REST: EnvelopeAnim = { glow: 0, crack: 0, top: 0, bottom: 0, left: 0, right: 0, light: 0, fade: 0, glint: 0 };
 
-/** The flap at rest: a V from the hinge (y=0) down to its tip; UVs match the body's texture. */
-function flapGeometry(w: number, h: number, depth: number): BufferGeometry {
-  const g = grid(FLAP_COLS, FLAP_ROWS, (u, v) => {
+const COLS = 10;
+const ROWS = 14;
+
+/**
+ * One triangular flap in its hinge frame: hinge along x (length `hinge`) at y = 0, tip at
+ * (0, -depth). UVs address the envelope's shared face texture, through the flap's placement.
+ */
+function flapGeometry(hinge: number, depth: number, place: (x: number, y: number) => [number, number], w: number, h: number): BufferGeometry {
+  const g = grid(COLS, ROWS, (u, v) => {
     const s = 1 - u * 2;
-    return [s * (w / 2) * Math.pow(1 - v, 0.96), -v * depth, 0];
+    return [s * (hinge / 2) * (1 - v), -v * depth, 0];
   });
   const pos = g.attributes.position!;
   const uv = g.attributes.uv!;
-  for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / w + 0.5, 1 + pos.getY(i) / h);
+  for (let i = 0; i < pos.count; i++) {
+    const [x, y] = place(pos.getX(i), pos.getY(i));
+    uv.setXY(i, x / w + 0.5, y / h + 0.5);
+  }
   return g;
 }
 
 /**
- * Bends the flap: the hinge turns by A while the paper lags behind it (curvature k), so the
- * flap peels up in a soft curl rather than swinging like a board.
+ * Folds a flap open: the hinge turns by A while the paper lags behind (curvature k), so it
+ * peels outwards in a soft curl rather than swinging like a board.
  */
-function curlFlap(g: BufferGeometry, rest: Float32Array, depth: number, flap: number) {
+function curlFlap(g: BufferGeometry, rest: Float32Array, depth: number, open: number) {
   const pos = g.attributes.position!;
-  const A = flap * Math.PI * 0.97;
-  const k = (-1.7 * Math.sin(Math.PI * Math.min(1, flap * 1.1))) / depth;
+  const A = open * Math.PI * 0.94;
+  const k = (-1.6 * Math.sin(Math.PI * Math.min(1, open * 1.08))) / depth;
   for (let i = 0; i < pos.count; i++) {
     const x = rest[i * 3]!;
     const d = -rest[i * 3 + 1]!;
@@ -79,16 +111,21 @@ function sealGeometry(R: number): BufferGeometry {
   return g;
 }
 
-/** Wax material that keeps only one Voronoi cell of the seal (its shard), with crack lines and a glint. */
-function shardMaterial(index: number, maps: { map: THREE_Texture; normal: THREE_Texture }, color: string) {
+type Tex = NonNullable<MeshStandardMaterial['map']>;
+
+/**
+ * Wax material that keeps only one Voronoi cell of the seal (its shard), with crack lines, a
+ * sweeping glint and a warm inner glow that rises in its rim before it breaks.
+ */
+function shardMaterial(index: number, maps: { map: Tex; normal: Tex }, color: string) {
   const m = new MeshPhysicalMaterial({
     color: '#ffffff',
     map: maps.map,
     normalMap: maps.normal,
     normalScale: new Vector2(1.1, 1.1),
-    roughness: 0.4,
+    roughness: 0.38,
     clearcoat: 0.85,
-    clearcoatRoughness: 0.22,
+    clearcoatRoughness: 0.2,
     sheen: 0.35,
     sheenColor: mixHex(color, '#ffffff', 0.35),
     transparent: true,
@@ -98,6 +135,7 @@ function shardMaterial(index: number, maps: { map: THREE_Texture; normal: THREE_
     uSeeds: { value: SEAL_SEEDS.map(([x, y]) => new Vector2(x, y)) },
     uCrack: { value: 0 },
     uGlint: { value: 0 },
+    uGlow: { value: 0 },
   };
   m.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
@@ -105,7 +143,7 @@ function shardMaterial(index: number, maps: { map: THREE_Texture; normal: THREE_
       .replace(
         '#include <common>',
         `#include <common>
-        uniform float uShard; uniform vec2 uSeeds[4]; uniform float uCrack; uniform float uGlint;
+        uniform float uShard; uniform vec2 uSeeds[4]; uniform float uCrack; uniform float uGlint; uniform float uGlow;
         float sgH(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
         float sgN(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
           return mix(mix(sgH(i), sgH(i + vec2(1.0, 0.0)), f.x), mix(sgH(i + vec2(0.0, 1.0)), sgH(i + vec2(1.0, 1.0)), f.x), f.y); }`,
@@ -126,16 +164,64 @@ function shardMaterial(index: number, maps: { map: THREE_Texture; normal: THREE_
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
         float crackLine = (1.0 - smoothstep(0.0, 0.03, sgEdge)) * smoothstep(0.0, 0.06, uCrack);
-        diffuseColor.rgb *= 1.0 - crackLine * 0.8;
+        float rim = smoothstep(0.55, 0.95, length(sp));
+        vec3 ember = vec3(1.0, 0.62, 0.36);
+        diffuseColor.rgb *= 1.0 - crackLine * 0.6;
+        totalEmissiveRadiance += ember * crackLine * uGlow * 2.2;
+        totalEmissiveRadiance += ember * uGlow * (0.06 + rim * 0.75);
         float band = exp(-pow((sp.x * 0.8 + sp.y * 0.6) - mix(-4.0, 4.0, uGlint), 2.0) * 14.0);
-        totalEmissiveRadiance += vec3(1.0, 0.86, 0.66) * band * 0.32;`,
+        totalEmissiveRadiance += vec3(1.0, 0.86, 0.66) * band * 0.28;`,
       );
   };
-  m.customProgramCacheKey = () => 'sg-seal-shard';
+  m.customProgramCacheKey = () => 'sg-seal-shard-v2';
   return { material: m, uniforms };
 }
-type THREE_Texture = NonNullable<MeshStandardMaterial['map']>;
 
+/** A soft warm radial glow (additive sprite texture). */
+function glowTexture(): CanvasTexture {
+  const [c, ctx] = canvas(128, 128);
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,244,222,1)');
+  g.addColorStop(0.35, 'rgba(255,226,186,0.55)');
+  g.addColorStop(1, 'rgba(255,214,170,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  return t;
+}
+
+interface FlapSpec {
+  id: FlapId;
+  hinge: number;
+  depth: number;
+  /** Hinge midpoint and rotation in the envelope plane (local -y points to the centre). */
+  at: [number, number];
+  angle: number;
+  /** Stacking above the inner panel (top flap folds over everything). */
+  z: number;
+}
+
+function flapSpecs(w: number, h: number): FlapSpec[] {
+  return FLAPS.map((id) => {
+    switch (id) {
+      case 'left':
+        return { id, hinge: h, depth: w / 2, at: [-w / 2, 0], angle: Math.PI / 2, z: 0.002 };
+      case 'right':
+        return { id, hinge: h, depth: w / 2, at: [w / 2, 0], angle: -Math.PI / 2, z: 0.002 };
+      case 'bottom':
+        return { id, hinge: w, depth: h / 2, at: [0, -h / 2], angle: Math.PI, z: 0.004 };
+      default:
+        return { id, hinge: w, depth: h / 2, at: [0, h / 2], angle: 0, z: 0.006 };
+    }
+  });
+}
+
+/**
+ * The ivory envelope of the gate: four flaps folded to a diamond, meeting under a burgundy wax
+ * seal. Opening: the seal glows and cracks away, the flaps peel open outwards one after another,
+ * and warm light pours out of the envelope until it dissolves into the garden.
+ */
 export function GardenEnvelope({
   size,
   colors,
@@ -143,51 +229,63 @@ export function GardenEnvelope({
   fontVar,
   state,
 }: {
-  size: { w: number; h: number; flap: number };
-  colors: { paper: string; wine: string; gold: string; seal: string };
+  size: { w: number; h: number };
+  colors: { paper: string; blush: string; gold: string; seal: string };
   monogram: string;
   fontVar: string;
   state: React.RefObject<EnvelopeAnim>;
 }) {
-  const { w, h, flap } = size;
-  const thick = 0.026;
-  const depth = h * flap;
-  const R = Math.min(w, h) * 0.125;
-  const sealY = h / 2 - depth + R * 0.5;
+  const { w, h } = size;
+  const R = Math.min(w, h) * 0.14;
+  const specs = useMemo(() => flapSpecs(w, h), [w, h]);
   const shardGroups = useRef<(Group | null)[]>([]);
-  const lastFlap = useRef(-1);
+  const glowMesh = useRef<Mesh>(null);
+  const last = useRef<Record<FlapId, number>>({ top: -1, bottom: -1, left: -1, right: -1 });
 
   const geo = useMemo(() => {
-    const flapGeo = flapGeometry(w, h, depth);
-    return { body: new BoxGeometry(w, h, thick), flap: flapGeo, rest: Float32Array.from(flapGeo.attributes.position!.array), seal: sealGeometry(R) };
-  }, [w, h, depth, R]);
+    const flaps = specs.map((f) => {
+      const c = Math.cos(f.angle);
+      const s = Math.sin(f.angle);
+      const g = flapGeometry(f.hinge, f.depth, (x, y) => [f.at[0] + x * c - y * s, f.at[1] + x * s + y * c], w, h);
+      return { geometry: g, rest: Float32Array.from(g.attributes.position!.array) };
+    });
+    return { flaps, inner: new PlaneGeometry(w * 0.995, h * 0.995), seal: sealGeometry(R), glow: new PlaneGeometry(1, 1) };
+  }, [specs, w, h, R]);
 
   const mats = useMemo(() => {
     if (typeof document === 'undefined') return null;
-    const body = envelopeBodyMaps(w, h, flap, colors);
-    const fl = envelopeFlapMaps(w, h, flap, colors);
+    const face = envelopeMaps(w, h, { paper: colors.paper, blush: colors.blush });
     const height = monogramHeight(monogram, cssFontFamily(fontVar, 'serif'));
-    const sealMaps = { map: tintFromHeight(height, colors.seal, mixHex(colors.gold, '#ffffff', 0.1)), normal: heightToNormal(height, 3) };
-    const paper = (m: typeof body) =>
-      new MeshPhysicalMaterial({ map: m.map, normalMap: m.normalMap, normalScale: new Vector2(0.7, 0.7), roughnessMap: m.ormMap, metalnessMap: m.ormMap, roughness: 1, metalness: 1, sheen: 0.4, sheenColor: '#ffffff', sheenRoughness: 0.6 });
-    const shards = [0, 1, 2, 3].map((i) => shardMaterial(i, sealMaps, colors.seal));
-    // Drawn in the transparent pass (fully opaque) after the pond's film, which otherwise tints the
-    // envelope's lower edge on tall screens.
+    const sealMaps = { map: tintFromHeight(height, colors.seal, mixHex(colors.gold, '#ffffff', 0.15)), normal: heightToNormal(height, 3) };
+    const glow = glowTexture();
     return {
-      body: Object.assign(paper(body), { transparent: true }),
-      flapFront: Object.assign(paper(fl), { side: FrontSide, transparent: true }),
-      flapBack: new MeshStandardMaterial({ map: fl.liner, roughness: 0.55, metalness: 0.15, side: BackSide, transparent: true }),
-      shards,
-      textures: [body.map, body.normalMap, body.ormMap, fl.map, fl.normalMap, fl.ormMap, fl.liner, sealMaps.map, sealMaps.normal],
+      front: new MeshPhysicalMaterial({
+        map: face.map,
+        normalMap: face.normalMap,
+        normalScale: new Vector2(0.9, 0.9),
+        roughness: 0.82,
+        sheen: 0.5,
+        sheenColor: '#ffffff',
+        sheenRoughness: 0.6,
+        side: FrontSide,
+        transparent: true,
+      }),
+      back: new MeshStandardMaterial({ map: face.liner, roughness: 0.75, side: BackSide, transparent: true }),
+      inner: new MeshBasicMaterial({ color: mixHex(colors.paper, colors.blush, 0.35), toneMapped: false, transparent: true }),
+      glow: new MeshBasicMaterial({ map: glow, color: '#ffffff', blending: AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false, opacity: 0 }),
+      shards: [0, 1, 2, 3].map((i) => shardMaterial(i, sealMaps, colors.seal)),
+      innerBase: new Color(mixHex(colors.paper, colors.blush, 0.35)),
+      innerHot: new Color('#FFF3DF'),
+      textures: [face.map, face.normalMap, face.liner, sealMaps.map, sealMaps.normal, glow],
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [w, h, flap, monogram, fontVar, colors.paper, colors.wine, colors.gold, colors.seal]);
+  }, [w, h, monogram, fontVar, colors.paper, colors.blush, colors.gold, colors.seal]);
 
   useEffect(
     () => () => {
-      geo.body.dispose();
-      geo.flap.dispose();
+      geo.flaps.forEach((f) => f.geometry.dispose());
+      geo.inner.dispose();
       geo.seal.dispose();
+      geo.glow.dispose();
     },
     [geo],
   );
@@ -195,24 +293,38 @@ export function GardenEnvelope({
     () => () => {
       if (!mats) return;
       mats.textures.forEach((t) => t.dispose());
-      [mats.body, mats.flapFront, mats.flapBack, ...mats.shards.map((s) => s.material)].forEach((m) => m.dispose());
+      [mats.front, mats.back, mats.inner, mats.glow, ...mats.shards.map((s) => s.material)].forEach((m) => m.dispose());
     },
     [mats],
   );
 
   useFrame(() => {
     const s = state.current;
-    if (!s) return;
-    if (Math.abs(s.flap - lastFlap.current) > 1e-5) {
-      curlFlap(geo.flap, geo.rest, depth, s.flap);
-      lastFlap.current = s.flap;
+    if (!s || !mats) return;
+    specs.forEach((f, i) => {
+      const open = s[f.id];
+      if (Math.abs(open - last.current[f.id]) < 1e-5) return;
+      curlFlap(geo.flaps[i]!.geometry, geo.flaps[i]!.rest, f.depth, open);
+      last.current[f.id] = open;
+    });
+    const keep = 1 - s.fade;
+    mats.front.opacity = keep;
+    mats.back.opacity = keep;
+    // The inside heats from warm paper to a white-gold light that blooms.
+    mats.inner.color.copy(mats.innerBase).lerp(mats.innerHot, Math.min(1, s.light * 1.4)).multiplyScalar(1 + s.light * s.light * 2.2);
+    mats.inner.opacity = keep;
+    mats.glow.opacity = Math.min(1, s.light * 1.2 + s.glow * 0.35 * (1 - s.crack)) * (0.4 + 0.6 * keep);
+    if (glowMesh.current) {
+      const k = (0.5 + s.glow * 0.4 + s.light * s.light * 2.6) * Math.max(w, h);
+      glowMesh.current.scale.set(k, k, 1);
     }
-    mats?.shards.forEach(({ material, uniforms }, i) => {
+    mats.shards.forEach(({ material, uniforms }, i) => {
       uniforms.uCrack.value = s.crack;
       uniforms.uGlint.value = s.glint;
+      uniforms.uGlow.value = s.glow;
       const m = shardMotion(i, s.crack);
-      material.opacity = m.opacity;
-      material.visible = m.opacity > 0.002;
+      material.opacity = m.opacity * keep;
+      material.visible = material.opacity > 0.002;
       const g = shardGroups.current[i];
       if (!g) return;
       const [sx, sy] = SEAL_SEEDS[i]!;
@@ -224,17 +336,20 @@ export function GardenEnvelope({
   if (!mats) return null;
   return (
     <group>
-      <mesh geometry={geo.body} material={mats.body} renderOrder={10} />
-      <group position={[0, h / 2 - 0.004, thick / 2 + 0.002]}>
-        <mesh geometry={geo.flap} material={mats.flapFront} renderOrder={11} />
-        <mesh geometry={geo.flap} material={mats.flapBack} renderOrder={11} />
-      </group>
-      <group position={[0, sealY, thick / 2 + 0.004]}>
+      <mesh geometry={geo.inner} material={mats.inner} renderOrder={10} />
+      {specs.map((f, i) => (
+        <group key={f.id} position={[f.at[0], f.at[1], f.z]} rotation-z={f.angle}>
+          <mesh geometry={geo.flaps[i]!.geometry} material={mats.front} renderOrder={11 + i} />
+          <mesh geometry={geo.flaps[i]!.geometry} material={mats.back} renderOrder={11 + i} />
+        </group>
+      ))}
+      <mesh ref={glowMesh} geometry={geo.glow} material={mats.glow} position={[0, 0, 0.05]} renderOrder={16} />
+      <group position={[0, 0, 0.012]}>
         {mats.shards.map(({ material }, i) => {
           const [sx, sy] = SEAL_SEEDS[i]!;
           return (
             <group key={i} ref={(g) => void (shardGroups.current[i] = g)}>
-              <mesh geometry={geo.seal} material={material} position={[-sx * R, -sy * R, 0]} renderOrder={12} />
+              <mesh geometry={geo.seal} material={material} position={[-sx * R, -sy * R, 0]} renderOrder={17} />
             </group>
           );
         })}

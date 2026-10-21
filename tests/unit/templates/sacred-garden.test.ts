@@ -9,9 +9,11 @@ import {
   archCentreline,
   archOutline,
   buildTrack,
+  CUSPS,
+  cuspedArc,
+  ENVELOPE_AT,
   envelopeSize,
-  hedgeProfile,
-  hedgeRoseLayout,
+  FLAPS,
   polygonArea,
   roseLayout,
   S3,
@@ -23,6 +25,7 @@ import {
   swanPlacement,
   SWANS,
   type V2,
+  VEIL,
 } from '@/templates/sacred-garden/layout';
 
 const PHONE = 390 / 844;
@@ -42,11 +45,25 @@ describe('pointed arch', () => {
     });
   });
 
-  it('outline area is the outer arch minus the opening', () => {
+  it('outline is the outer arch minus a cusped opening (a little smaller than the plain one)', () => {
     const { a, t } = ARCH;
     const region = (hw: number): V2[] => [[-hw, 0], ...archArc(hw, -1, 24), ...archArc(hw, 1, 24).reverse().slice(1), [hw, 0]];
-    const expected = polygonArea(region(a + t)) - polygonArea(region(a));
-    expect(polygonArea(archOutline(24))).toBeCloseTo(expected, 6);
+    const plain = polygonArea(region(a + t)) - polygonArea(region(a));
+    const area = polygonArea(archOutline(24));
+    expect(area).toBeGreaterThan(plain);
+    expect(area).toBeLessThan(plain * 1.15);
+  });
+
+  it('cusps reach into the opening between lobes and keep the arch ends', () => {
+    const plain = archArc(ARCH.a, -1, 6 * CUSPS.lobes);
+    const cusped = cuspedArc(ARCH.a, -1, 6);
+    expect(cusped).toHaveLength(plain.length);
+    const centre: V2 = [ARCH.e, ARCH.spring];
+    const r = (p: V2) => Math.hypot(p[0] - centre[0], p[1] - centre[1]);
+    // Lobe middles sit on the arc; the points between lobes stand in by the cusp depth.
+    expect(r(cusped[3]!)).toBeCloseTo(r(plain[3]!), 6);
+    expect(r(plain[6]!) - r(cusped[6]!)).toBeCloseTo(CUSPS.depth, 6);
+    expect(cusped[0]![1]).toBeLessThan(plain[0]![1] + 1e-9);
   });
 
   it('samples the centreline by length with outward normals', () => {
@@ -81,17 +98,6 @@ describe('roses', () => {
     }
   });
 
-  it('climb the hedge thinly behind the opening', () => {
-    const spots = hedgeRoseLayout(150);
-    const behind = spots.filter((r) => Math.abs(r.position[0]) < 1.7 && r.position[1] > 0.9 && r.position[1] < hedgeProfile(0) - 0.5);
-    expect(behind.length).toBeLessThan(spots.length * 0.08);
-  });
-
-  it('the hedge is tallest behind the arch', () => {
-    expect(hedgeProfile(0)).toBeGreaterThan(hedgeProfile(4));
-    expect(hedgeProfile(4)).toBeGreaterThan(hedgeProfile(8));
-    expect(hedgeProfile(0)).toBeGreaterThanOrEqual(4.5);
-  });
 });
 
 describe('swans', () => {
@@ -160,6 +166,25 @@ describe('camera', () => {
     const d = envelopeSize(DESKTOP);
     expect(p.h).toBeGreaterThan(p.w);
     expect(d.w).toBeGreaterThan(d.h);
+    expect(FLAPS).toEqual(['top', 'bottom', 'left', 'right']);
+  });
+
+  it('on phones the gate overfills the screen with the envelope', () => {
+    const env = envelopeSize(PHONE);
+    const shot = evaluateTrack(buildTrack(env), 0);
+    const pos = framedPosition(shot, PHONE);
+    const d = pos[2] - ENVELOPE_AT[2];
+    const visibleH = 2 * d * Math.tan(((shot.fov / 2) * Math.PI) / 180);
+    expect(visibleH).toBeLessThan(env.h);
+    expect(visibleH * PHONE).toBeLessThan(env.w);
+  });
+
+  it('the light whites out before the cut to the garden and clears after it', () => {
+    const track = buildTrack(envelopeSize(PHONE));
+    const cut = track.findIndex((k) => k.shot.target[2] < 0);
+    expect(track[cut - 1]!.at).toBeGreaterThanOrEqual(VEIL.full - 1e-9);
+    expect(track[cut]!.at).toBeLessThan(VEIL.out);
+    expect(VEIL.in).toBeLessThan(VEIL.full);
   });
 
   it('the track runs 8 s, ends on S3 and never dips under the water', () => {

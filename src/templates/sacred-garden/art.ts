@@ -1,10 +1,10 @@
 /**
- * Canvas-painted maps for the Sacred Garden: the blush envelope (paper fibres, gilded floral
- * emboss, folds, a wine liner with a gold lattice), the flap, stone grain and lawn. Drawn once
- * at load time; nothing is downloaded.
+ * Canvas-painted maps for the Sacred Garden: the ivory envelope (cotton fibres, four folds,
+ * blind-embossed flowering sprays, a blush liner), stone grain and lawn. Drawn once at load
+ * time; nothing is downloaded.
  */
 import { CanvasTexture, NoColorSpace, RepeatWrapping, SRGBColorSpace } from 'three';
-import { hexToRgb, mixHex, shadeHex } from '@/lib/invite/stage/color';
+import { mixHex, shadeHex } from '@/lib/invite/stage/color';
 import { canvas, heightToNormal } from '@/lib/invite/stage/textures';
 import { rng } from './layout';
 
@@ -28,53 +28,6 @@ function fibres(ctx: Ctx, w: number, h: number, seed: number, light: string, dar
   ctx.globalAlpha = 1;
 }
 
-/** Wine liner with a fine gold lattice of quatrefoils. */
-function liner(ctx: Ctx, w: number, h: number, wine: string, gold: string) {
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, shadeHex(wine, 0.8));
-  g.addColorStop(1, mixHex(wine, '#000000', 0.05));
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, w, h);
-  const cell = Math.max(18, Math.round(w / 16));
-  ctx.strokeStyle = gold;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = Math.max(1, cell / 22);
-  for (let y = 0; y < h + cell; y += cell) {
-    for (let x = (y / cell) % 2 ? cell / 2 : 0; x < w + cell; x += cell) {
-      for (let k = 0; k < 4; k++) {
-        const a = (k * Math.PI) / 2;
-        ctx.beginPath();
-        ctx.ellipse(x + Math.cos(a) * cell * 0.17, y + Math.sin(a) * cell * 0.17, cell * 0.16, cell * 0.08, a, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-
-/** Mixes gold into `base` where `mask` is lit, and returns roughness/metal for the foil. */
-function gild(base: HTMLCanvasElement, height: HTMLCanvasElement, gold: string, threshold = 0.35) {
-  const { width: w, height: h } = base;
-  const src = base.getContext('2d')!.getImageData(0, 0, w, h);
-  const hd = height.getContext('2d')!.getImageData(0, 0, w, h).data;
-  const [gr, gg, gb] = hexToRgb(gold);
-  const [orm, octx] = canvas(w, h);
-  const od = octx.createImageData(w, h);
-  for (let i = 0; i < hd.length; i += 4) {
-    const t = Math.min(1, Math.max(0, (hd[i]! / 255 - threshold) / (1 - threshold)) * 1.5);
-    src.data[i] = src.data[i]! + (gr - src.data[i]!) * t;
-    src.data[i + 1] = src.data[i + 1]! + (gg - src.data[i + 1]!) * t;
-    src.data[i + 2] = src.data[i + 2]! + (gb - src.data[i + 2]!) * t;
-    od.data[i] = 255;
-    od.data[i + 1] = Math.round((0.82 - 0.5 * t) * 255); // roughness (G)
-    od.data[i + 2] = Math.round(t * 0.9 * 255); // metalness (B)
-    od.data[i + 3] = 255;
-  }
-  base.getContext('2d')!.putImageData(src, 0, 0);
-  octx.putImageData(od, 0, 0);
-  return orm;
-}
-
 function tex(c: HTMLCanvasElement, srgb: boolean): CanvasTexture {
   const t = new CanvasTexture(c);
   t.colorSpace = srgb ? SRGBColorSpace : NoColorSpace;
@@ -83,229 +36,179 @@ function tex(c: HTMLCanvasElement, srgb: boolean): CanvasTexture {
 }
 
 /**
- * A stationer's border: gold-foil double rule and corner rosettes (drawn into `gold` and
- * `height`), with a blind-embossed vine of leaves and small blossoms between them (height only).
+ * A blind-embossed flowering spray: a gently curving stem with alternating leaves, sprigs and
+ * five-petal blossoms. Drawn in white into a height canvas (and faintly into the colour map, so
+ * the relief still reads where the light is flat).
  */
-function vineBorder(height: Ctx, gold: Ctx, w: number, h: number, seed: number) {
+function spray(ctxs: Ctx[], x: number, y: number, angle: number, length: number, size: number, seed: number) {
   const rand = rng(seed);
-  const inset = Math.round(Math.min(w, h) * 0.05);
-  const both = (fn: (c: Ctx) => void) => [height, gold].forEach(fn);
-  both((c) => {
-    c.strokeStyle = '#fff';
-    c.fillStyle = '#fff';
-    c.lineWidth = 3;
-    c.strokeRect(inset, inset, w - inset * 2, h - inset * 2);
-    c.lineWidth = 1.2;
-    c.strokeRect(inset + 22, inset + 22, w - (inset + 22) * 2, h - (inset + 22) * 2);
-  });
-  const mid = inset + 11;
-  const runs: [number, number, number, number][] = [
-    [mid + 26, mid, w - mid - 26, mid],
-    [w - mid, mid + 26, w - mid, h - mid - 26],
-    [w - mid - 26, h - mid, mid + 26, h - mid],
-    [mid, h - mid - 26, mid, mid + 26],
-  ];
-  height.lineWidth = 1.6;
-  for (const [x0, y0, x1, y1] of runs) {
-    const len = Math.hypot(x1 - x0, y1 - y0);
-    const ux = (x1 - x0) / len;
-    const uy = (y1 - y0) / len;
-    const at = (s: number) => {
-      const off = Math.sin(s / 14) * 4;
-      return [x0 + ux * s - uy * off, y0 + uy * s + ux * off] as const;
-    };
-    height.beginPath();
-    for (let s = 0; s <= len; s += 3) {
-      const [x, y] = at(s);
-      if (s === 0) height.moveTo(x, y);
-      else height.lineTo(x, y);
-    }
-    height.stroke();
-    for (let s = 12; s < len - 8; s += 22) {
-      const [x, y] = at(s);
-      const side = Math.round(s / 22) % 2 ? 1 : -1;
-      height.save();
-      height.translate(x, y);
-      height.rotate(Math.atan2(uy, ux) + side * 0.9);
-      height.beginPath();
-      height.ellipse(5, 0, 5, 2.2, 0, 0, Math.PI * 2);
-      height.fill();
-      height.restore();
-      if (rand() < 0.22) {
-        for (let k = 0; k < 5; k++) {
-          const a = (k / 5) * Math.PI * 2;
-          height.beginPath();
-          height.arc(x + Math.cos(a) * 3.2, y + Math.sin(a) * 3.2, 2.2, 0, Math.PI * 2);
-          height.fill();
-        }
-        gold.beginPath();
-        gold.arc(x, y, 1.6, 0, Math.PI * 2);
-        gold.fill();
-      }
-    }
-  }
-  const r = inset * 0.5;
-  for (const [x, y] of [
-    [mid, mid],
-    [w - mid, mid],
-    [mid, h - mid],
-    [w - mid, h - mid],
-  ] as const) {
-    both((c) => {
-      for (let k = 0; k < 8; k++) {
-        const a = (k * Math.PI) / 4;
-        c.save();
-        c.translate(x + Math.cos(a) * r * 0.75, y + Math.sin(a) * r * 0.75);
-        c.rotate(a);
-        c.beginPath();
-        c.ellipse(0, 0, r * 0.62, r * 0.26, 0, 0, Math.PI * 2);
-        c.fill();
-        c.restore();
-      }
+  const bend = (rand() - 0.5) * 0.9;
+  const at = (s: number) => {
+    const a = angle + bend * s * s;
+    const d = s * length;
+    const sway = Math.sin(s * Math.PI * 1.3 + seed) * length * 0.05;
+    return [x + Math.cos(a) * d - Math.sin(a) * sway, y + Math.sin(a) * d + Math.cos(a) * sway, a] as const;
+  };
+  const leaf = (c: Ctx, px: number, py: number, a: number, l: number) => {
+    c.save();
+    c.translate(px, py);
+    c.rotate(a);
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.quadraticCurveTo(l * 0.5, -l * 0.32, l, 0);
+    c.quadraticCurveTo(l * 0.5, l * 0.32, 0, 0);
+    c.fill();
+    c.restore();
+  };
+  const blossom = (c: Ctx, px: number, py: number, r: number, spin: number) => {
+    for (let k = 0; k < 5; k++) {
+      const a = spin + (k / 5) * Math.PI * 2;
       c.beginPath();
-      c.arc(x, y, r * 0.36, 0, Math.PI * 2);
+      c.ellipse(px + Math.cos(a) * r * 0.62, py + Math.sin(a) * r * 0.62, r * 0.56, r * 0.4, a, 0, Math.PI * 2);
       c.fill();
-    });
+    }
+  };
+  for (const c of ctxs) {
+    const solid = c.fillStyle;
+    c.lineCap = 'round';
+    c.lineWidth = Math.max(1.6, size * 0.22);
+    c.beginPath();
+    for (let s = 0; s <= 1.0001; s += 0.02) {
+      const [px, py] = at(s);
+      if (s === 0) c.moveTo(px, py);
+      else c.lineTo(px, py);
+    }
+    c.stroke();
+    const r2 = rng(seed + 1);
+    for (let s = 0.08; s < 0.98; s += 0.085) {
+      const [px, py, a] = at(s);
+      const side = Math.round(s / 0.085) % 2 ? 1 : -1;
+      const l = size * (1.6 + r2() * 0.8) * (1 - s * 0.35);
+      leaf(c, px, py, a + side * (0.7 + r2() * 0.3), l);
+      if (r2() < 0.5) leaf(c, px, py, a - side * (0.6 + r2() * 0.3), l * 0.7);
+      if (r2() < 0.55) {
+        // A sprig: short twig ending in a blossom or a bud.
+        const ta = a + side * (0.9 + r2() * 0.4);
+        const tl = size * (1.8 + r2() * 1.2);
+        const tx = px + Math.cos(ta) * tl;
+        const ty = py + Math.sin(ta) * tl;
+        c.lineWidth = Math.max(1, size * 0.12);
+        c.beginPath();
+        c.moveTo(px, py);
+        c.lineTo(tx, ty);
+        c.stroke();
+        c.fillStyle = solid;
+        if (r2() < 0.7) blossom(c, tx, ty, size * (0.7 + r2() * 0.35), r2() * 6);
+        else {
+          c.beginPath();
+          c.ellipse(tx, ty, size * 0.3, size * 0.48, ta, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.lineWidth = Math.max(1.6, size * 0.22);
+      }
+    }
+    const [ex, ey] = at(1);
+    blossom(c, ex, ey, size * 1.05, seed);
   }
 }
 
-function blank(w: number, h: number) {
-  const [c, ctx] = canvas(w, h);
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, w, h);
-  ctx.filter = 'blur(1.2px)';
-  return [c, ctx] as const;
-}
-
-export interface PaperMaps {
+export interface EnvelopeMaps {
+  /** Front (all four flaps share it: UV = position across the closed envelope). */
   map: CanvasTexture;
   normalMap: CanvasTexture;
-  ormMap: CanvasTexture;
+  /** The flaps' inside: blush with a fine cream print. */
+  liner: CanvasTexture;
 }
 
 /**
- * The envelope's back: blush paper with an embossed, gilded floral border and fold lines; the
- * throat under the flap shows the wine liner. `flap` = flap depth as a fraction of height.
+ * The ivory envelope's face: soft cotton paper, the four fold triangles in barely different
+ * whites, and blind-embossed flowering sprays climbing the side flaps and framing the top and
+ * bottom ones. Drawn for the envelope's own proportions (`w` × `h`).
  */
-export function envelopeBodyMaps(w: number, h: number, flap: number, colors: { paper: string; wine: string; gold: string }): PaperMaps {
-  const cw = 768;
+export function envelopeMaps(w: number, h: number, colors: { paper: string; blush: string }): EnvelopeMaps {
+  const cw = 640;
   const ch = Math.round((cw * h) / w);
+  const cx = cw / 2;
+  const cy = ch / 2;
   const [c, ctx] = canvas(cw, ch);
   ctx.fillStyle = colors.paper;
   ctx.fillRect(0, 0, cw, ch);
-  // Side flaps a touch darker, bottom flap lighter: the folds of the envelope's back.
-  const cx = cw / 2;
-  const cy = ch * 0.56;
-  ctx.fillStyle = shadeHex(colors.paper, 0.965);
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(cx, cy);
-  ctx.lineTo(0, ch);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(cw, 0);
-  ctx.lineTo(cx, cy);
-  ctx.lineTo(cw, ch);
-  ctx.fill();
-  ctx.fillStyle = mixHex(colors.paper, '#ffffff', 0.18);
-  ctx.beginPath();
-  ctx.moveTo(0, ch);
-  ctx.lineTo(cx, cy);
-  ctx.lineTo(cw, ch);
-  ctx.fill();
-  fibres(ctx, cw, ch, 5, '#ffffff', shadeHex(colors.paper, 0.8));
-  // Throat: the liner, seen once the flap lifts.
-  const throat = ch * flap * 0.94;
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(cw * 0.03, 0);
-  ctx.lineTo(cw * 0.97, 0);
-  ctx.lineTo(cx, throat);
-  ctx.closePath();
-  ctx.clip();
-  liner(ctx, cw, throat, colors.wine, colors.gold);
-  const sh = ctx.createLinearGradient(0, 0, 0, throat);
-  sh.addColorStop(0, 'rgba(0,0,0,0.45)');
-  sh.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = sh;
-  ctx.fillRect(0, 0, cw, throat);
-  ctx.restore();
-
-  const [height, hctx] = blank(cw, ch);
-  const [goldMask, gctx] = blank(cw, ch);
-  vineBorder(hctx, gctx, cw, ch, 5);
-  hctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  hctx.lineWidth = 2;
-  hctx.beginPath();
-  hctx.moveTo(0, ch);
-  hctx.lineTo(cx, cy);
-  hctx.lineTo(cw, ch);
-  hctx.stroke();
-  const ormCanvas = gild(c, goldMask, colors.gold, 0.3);
-  return { map: tex(c, true), normalMap: heightToNormal(height, 2.4), ormMap: tex(ormCanvas, false) };
-}
-
-/** The flap's outside (gilded scalloped border along its two edges) and its inside (the liner). */
-export function envelopeFlapMaps(w: number, h: number, flap: number, colors: { paper: string; wine: string; gold: string }): PaperMaps & { liner: CanvasTexture } {
-  const cw = 768;
-  const ch = Math.round((cw * h) / w);
-  const depth = ch * flap;
-  const [c, ctx] = canvas(cw, ch);
-  ctx.fillStyle = mixHex(colors.paper, '#ffffff', 0.08);
-  ctx.fillRect(0, 0, cw, ch);
-  fibres(ctx, cw, ch, 9, '#ffffff', shadeHex(colors.paper, 0.8));
-  const [height, hctx] = blank(cw, ch);
-  const [goldMask, gctx] = blank(cw, ch);
-  hctx.strokeStyle = '#fff';
-  hctx.fillStyle = '#fff';
-  gctx.strokeStyle = '#fff';
-  const inset = cw * 0.045;
-  const edge = (k: number) => {
-    // A line parallel to the flap's slanted edges, `k` px inside.
-    const slope = depth / (cw / 2);
-    const dy = k * Math.sqrt(1 + slope * slope);
-    return [
-      [k * 1.6, 0],
-      [cw / 2, depth - dy],
-      [cw - k * 1.6, 0],
-    ] as const;
+  // The four folds, each a whisper apart: side flaps cooler, bottom warmer, top lightest.
+  const tri = (pts: [number, number][], fill: string) => {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.closePath();
+    ctx.fill();
   };
-  for (const [k, lw] of [
-    [inset, 3],
-    [inset + 10, 1.4],
-  ] as const) {
-    const p = edge(k);
-    for (const c of [hctx, gctx]) {
-      c.lineWidth = lw;
-      c.beginPath();
-      c.moveTo(p[0][0], p[0][1]);
-      c.lineTo(p[1][0], p[1][1]);
-      c.lineTo(p[2][0], p[2][1]);
-      c.stroke();
+  tri([[0, 0], [cx, cy], [0, ch]], shadeHex(colors.paper, 0.975));
+  tri([[cw, 0], [cx, cy], [cw, ch]], shadeHex(colors.paper, 0.975));
+  tri([[0, ch], [cx, cy], [cw, ch]], mixHex(colors.paper, '#ffffff', 0.12));
+  tri([[0, 0], [cx, cy], [cw, 0]], mixHex(colors.paper, '#ffffff', 0.22));
+  fibres(ctx, cw, ch, 5, '#ffffff', shadeHex(colors.paper, 0.86));
+  // A soft, warm falloff to the corners, as if lit from the seal.
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.hypot(cx, cy));
+  glow.addColorStop(0, 'rgba(255,250,240,0.18)');
+  glow.addColorStop(1, 'rgba(120,90,70,0.10)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, cw, ch);
+
+  const [height, hctx] = canvas(cw, ch);
+  hctx.fillStyle = '#000';
+  hctx.fillRect(0, 0, cw, ch);
+  hctx.filter = 'blur(1.4px)';
+  hctx.fillStyle = '#fff';
+  hctx.strokeStyle = '#fff';
+  // The colour map gets the same sprays, faintly darker (shadowed relief reads in flat light).
+  ctx.fillStyle = 'rgba(150,118,92,0.09)';
+  ctx.strokeStyle = 'rgba(150,118,92,0.09)';
+  const both = [hctx, ctx];
+  const u = cw / 640;
+  const leafSize = 11 * u;
+  // Side flaps: two intertwined sprays climbing from each bottom corner and two falling from each
+  // top one, so the long edges carry a full garland.
+  for (const side of [-1, 1]) {
+    const x = side < 0 ? cw * 0.1 : cw * 0.9;
+    const seed = side < 0 ? 3 : 13;
+    spray(both, x, ch * 0.985, -Math.PI / 2 + side * 0.1, ch * 0.42, leafSize, seed);
+    spray(both, x - side * cw * 0.035, ch * 0.9, -Math.PI / 2 + side * 0.22, ch * 0.3, leafSize * 0.85, seed + 1);
+    spray(both, x, ch * 0.015, Math.PI / 2 - side * 0.1, ch * 0.36, leafSize * 0.95, seed + 2);
+    spray(both, x - side * cw * 0.035, ch * 0.09, Math.PI / 2 - side * 0.24, ch * 0.24, leafSize * 0.8, seed + 3);
+    // Top and bottom flaps: sprays tucked along the slanted edges, opening towards the centre.
+    spray(both, cx + side * cw * 0.3, ch * 0.03, Math.PI / 2 + side * 1.0, cw * 0.24, leafSize * 0.85, seed + 4);
+    spray(both, cx + side * cw * 0.3, ch * 0.97, -Math.PI / 2 - side * 1.0, cw * 0.24, leafSize * 0.85, seed + 5);
+  }
+  // Creases: a fine raised line along each fold.
+  hctx.filter = 'blur(0.8px)';
+  hctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  hctx.lineWidth = 2;
+  for (const [x, y] of [[0, 0], [cw, 0], [0, ch], [cw, ch]] as const) {
+    hctx.beginPath();
+    hctx.moveTo(x, y);
+    hctx.lineTo(cx, cy);
+    hctx.stroke();
+  }
+
+  const [lc, lctx] = canvas(256, 256);
+  const lining = mixHex(colors.blush, colors.paper, 0.45);
+  lctx.fillStyle = lining;
+  lctx.fillRect(0, 0, 256, 256);
+  lctx.fillStyle = mixHex(lining, '#ffffff', 0.55);
+  const lr = rng(17);
+  for (let i = 0; i < 26; i++) {
+    const x = lr() * 256;
+    const y = lr() * 256;
+    for (let k = 0; k < 5; k++) {
+      const a = (k / 5) * Math.PI * 2;
+      lctx.beginPath();
+      lctx.ellipse(x + Math.cos(a) * 4, y + Math.sin(a) * 4, 3.6, 2.4, a, 0, Math.PI * 2);
+      lctx.fill();
     }
   }
-  // Petal chain along both edges.
-  const p = edge(inset + 24);
-  for (const [a, b] of [
-    [p[0], p[1]],
-    [p[1], p[2]],
-  ] as const) {
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
-    for (let s = 18; s < len - 12; s += 22) {
-      hctx.save();
-      hctx.translate(a[0] + Math.cos(ang) * s, a[1] + Math.sin(ang) * s);
-      hctx.rotate(ang + ((s / 22) % 2 ? 0.5 : -0.5));
-      hctx.beginPath();
-      hctx.ellipse(0, 0, 6, 2.4, 0, 0, Math.PI * 2);
-      hctx.fill();
-      hctx.restore();
-    }
-  }
-  const ormCanvas = gild(c, goldMask, colors.gold, 0.3);
-  const [lc, lctx] = canvas(cw, ch);
-  liner(lctx, cw, ch, colors.wine, colors.gold);
-  return { map: tex(c, true), normalMap: heightToNormal(height, 2.2), ormMap: tex(ormCanvas, false), liner: tex(lc, true) };
+  const liner = tex(lc, true);
+  liner.wrapS = liner.wrapT = RepeatWrapping;
+  liner.repeat.set(3, 3);
+  return { map: tex(c, true), normalMap: heightToNormal(height, 3.4), liner };
 }
 
 /** Weathered limestone grain (tiling normal map). */

@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { inviteDict } from '@/lib/i18n';
 import { dirOf } from '@/lib/lang';
-import { paletteCssVars } from '@/lib/palette';
+import { paletteCssVars, relativeLuminance } from '@/lib/palette';
 import { FALLBACK_LOADERS, type FallbackModule } from '@/templates/fallbacks';
 import { SCENE_LOADERS } from '@/templates/scenes';
 import { audio } from '../audio/engine';
@@ -246,6 +246,13 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
   const opening = phase === 'opening';
   const vars = paletteCssVars(view.palette) as React.CSSProperties;
   const header = template.gate.header ?? 'full';
+  // A light band (ivory paper gates) takes dark text and soft cream shading instead of black scrims.
+  const lightGate = relativeLuminance(view.palette.band) > 0.45;
+  const scrim = lightGate ? 'color-mix(in srgb, var(--c-band) 70%, transparent)' : 'rgb(0 0 0 / 0.38)';
+  // The painted backdrop fades out at the 3D gate and is gone once the opening starts: a
+  // full-screen layer left at opacity 0 over the canvas can still flash as a solid block while
+  // Chrome rasterises it.
+  const backdrop = !(path === '3d' && phase !== 'boot' && phase !== 'loading' && phase !== 'gate');
 
   return (
     <div style={vars} dir={dirOf(view.wedding.lang)} className={`invite-lang-${view.wedding.lang}`} data-path={path} data-phase={phase}>
@@ -272,13 +279,19 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
           className={`invite-gate fixed inset-0 z-30 flex flex-col items-center justify-between px-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(2rem,env(safe-area-inset-top))] text-center text-inv-on-band transition-opacity duration-700 ${phase === 'handoff' ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
         >
           {/* Until the 3D scene has drawn, a painted backdrop stands in for it. */}
-          <div
-            aria-hidden="true"
-            className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${path === '3d' && phase !== 'boot' && phase !== 'loading' ? 'opacity-0' : 'opacity-100'}`}
-            style={{ background: `radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--c-gold) 20%, var(--c-band)) 0%, var(--c-band) 60%, color-mix(in srgb, var(--c-band) 55%, black) 100%)` }}
-          />
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-1/3 bg-gradient-to-b from-black/35 to-transparent" />
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-black/40 to-transparent" />
+          {backdrop && (
+            <div
+              aria-hidden="true"
+              className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${path === '3d' && phase !== 'boot' && phase !== 'loading' ? 'opacity-0' : 'opacity-100'}`}
+              style={{
+                background: lightGate
+                  ? 'radial-gradient(120% 80% at 50% 45%, color-mix(in srgb, white 35%, var(--c-band)) 0%, var(--c-band) 60%, color-mix(in srgb, var(--c-band) 88%, var(--c-gold)) 100%)'
+                  : 'radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--c-gold) 20%, var(--c-band)) 0%, var(--c-band) 60%, color-mix(in srgb, var(--c-band) 55%, black) 100%)',
+              }}
+            />
+          )}
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-1/3" style={{ background: `linear-gradient(to bottom, ${scrim}, transparent)` }} />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-1/3" style={{ background: `linear-gradient(to top, ${scrim}, transparent)` }} />
 
           <header className={`relative z-10 transition duration-700 ${opening ? '-translate-y-4 opacity-0' : ''} ${header === 'none' ? 'sr-only' : ''}`}>
             <p className="text-sm text-inv-gold">{view.guest ? t.greetingGuest(view.guest.displayName) : t.greetingGeneric}</p>

@@ -87,13 +87,36 @@ export function archArc(halfWidth: number, side: -1 | 1, segments: number): V2[]
   return out;
 }
 
-/** The arch with its two pillars as one closed polygon (an upside-down U with a pointed top). */
+/** Lobes along each side of the opening (a Mughal cusped arch). */
+export const CUSPS = { lobes: 4, depth: 0.075 } as const;
+
+/**
+ * The inner edge of one side, cusped: the pointed arc with semicircular lobes cut into it, so
+ * small points (cusps) reach into the opening between them. Same ends as `archArc`.
+ */
+export function cuspedArc(halfWidth: number, side: -1 | 1, segments: number): V2[] {
+  const arc = archArc(halfWidth, side, segments * CUSPS.lobes);
+  const cx = side < 0 ? ARCH.e : -ARCH.e;
+  const n = arc.length - 1;
+  return arc.map(([x, y], i) => {
+    const f = ((i / n) * CUSPS.lobes) % 1;
+    // 0 at each lobe's middle, `depth` at the cusps between lobes (and at the springing/apex).
+    const off = CUSPS.depth * (1 - Math.sqrt(Math.max(0, 1 - (2 * f - 1) ** 2)));
+    const dx = cx - x;
+    const dy = ARCH.spring - y;
+    const len = Math.hypot(dx, dy) || 1;
+    return [x + (dx / len) * off, y + (dy / len) * off];
+  });
+}
+
+/** The arch with its two pillars as one closed polygon: pointed outside, cusped inside. */
 export function archOutline(segments = 24): V2[] {
   const { a, t } = ARCH;
   const outerL = archArc(a + t, -1, segments);
   const outerR = archArc(a + t, 1, segments).reverse().slice(1);
-  const innerR = archArc(a, 1, segments);
-  const innerL = archArc(a, -1, segments).reverse().slice(1);
+  const lobe = Math.max(4, Math.round(segments / CUSPS.lobes));
+  const innerR = cuspedArc(a, 1, lobe);
+  const innerL = cuspedArc(a, -1, lobe).reverse().slice(1);
   return [[-(a + t), 0], ...outerL, ...outerR, [a + t, 0], [a, 0], ...innerR, ...innerL, [-a, 0]];
 }
 
@@ -243,37 +266,6 @@ export function leafLayout(roses: RoseSpot[], extra: number, seed = 23): LeafSpo
   return out;
 }
 
-/** The hedge behind the pool. */
-export const HEDGE = { z: -9.8, depth: 1.6 } as const;
-
-/** Hedge height along its length: tall behind the arch (so the opening is all leaves), stepping down at the sides. */
-export function hedgeProfile(x: number): number {
-  const a = Math.abs(x);
-  return 3.6 + 0.5 * smoothstep(4.75, 4.45, a) + 0.5 * smoothstep(3.05, 2.75, a);
-}
-
-/** Climbing roses scattered over the hedge face, thickest near its top, sparse behind the arch's opening. */
-export function hedgeRoseLayout(count: number, seed = 61): RoseSpot[] {
-  const rand = rng(seed);
-  const out: RoseSpot[] = [];
-  let guard = 0;
-  while (out.length < count && guard++ < count * 40) {
-    const x = (rand() * 2 - 1) * 12.5;
-    const top = hedgeProfile(x);
-    const y = top * Math.sqrt(rand());
-    if (y < 0.4 || y > top - 0.08) continue;
-    if (Math.abs(x) < 1.7 && y > 0.9 && y < top - 0.5 && rand() > 0.15) continue;
-    out.push({
-      position: [x, y, HEDGE.z + HEDGE.depth / 2 + 0.05 + rand() * 0.12],
-      facing: [(rand() - 0.5) * 0.6, (rand() - 0.3) * 0.6, 1],
-      scale: 0.08 + rand() * 0.07,
-      hue: rand(),
-      spin: rand() * Math.PI * 2,
-    });
-  }
-  return out;
-}
-
 /** A climbing stem spiralling around the arch ring. */
 export function vinePath(phase: number, turns = 9, samples = 220): V3[] {
   const line = archCentreline(48);
@@ -341,25 +333,41 @@ export function shardMotion(i: number, c: number): { offset: V3; rotation: V3; o
   };
 }
 
-/** Envelope proportions for the screen: portrait on phones (fills the middle band), landscape on desktop. */
-export function envelopeSize(aspect: number): { w: number; h: number; flap: number } {
-  return aspect < 0.85 ? { w: 1.1, h: 1.5, flap: 0.46 } : { w: 1.62, h: 1.06, flap: 0.58 };
+/** The envelope's four flaps, in the order they fold open. */
+export const FLAPS = ['top', 'bottom', 'left', 'right'] as const;
+export type FlapId = (typeof FLAPS)[number];
+
+/** Envelope proportions for the screen: tall enough to fill a phone, a landscape card on desktop. */
+export function envelopeSize(aspect: number): { w: number; h: number } {
+  return aspect < 0.85 ? { w: 1.0, h: 2.0 } : { w: 1.72, h: 1.12 };
 }
 
-export const ENVELOPE_AT: V3 = [0, 1.2, 3.2];
+export const ENVELOPE_AT: V3 = [0, 1.25, 3.4];
 
-/** The opening's camera track (8 s). Shots carry `fit` boxes so phones and desktops both compose. */
-export function buildTrack(env: { w: number; h: number; flap: number }): TrackKey[] {
+/** When the opening's light whites out the frame (s): the envelope gives way to the garden. */
+export const VEIL = { in: 2.35, full: 2.75, out: 3.9 } as const;
+
+/**
+ * The opening's camera track (8 s). Shots carry `fit` boxes so phones and desktops both
+ * compose: on phones the envelope fills the screen edge to edge.
+ */
+export function buildTrack(env: { w: number; h: number }): TrackKey[] {
   const [ex, ey, ez] = ENVELOPE_AT;
-  const sealY = ey + env.h / 2 - env.h * env.flap + 0.06;
+  const portrait = env.h > env.w;
+  const gate: [number, number] = portrait ? [env.w * 0.74, env.h * 0.74] : [env.w * 1.3, env.h * 1.75];
+  // Wide screens: aim a little above the card so it sits below the names in the gate's header.
+  const lift = portrait ? 0 : env.h * 0.08;
   const shot = (s: Shot): Shot => s;
   return [
-    { at: 0, shot: shot({ position: [ex, ey + 0.42, ez + 4.4], target: [ex, ey - 0.02, ez], fov: 27, fit: [env.w * 1.14, env.h * 1.78] }) },
-    { at: 0.55, shot: shot({ position: [ex, sealY + 0.25, ez + 2.4], target: [ex, sealY, ez], fov: 27, fit: [env.w * 0.86, env.h * 1.15] }) },
-    { at: 1.65, shot: shot({ position: [ex, ey + 0.5, ez + 4.2], target: [ex, ey + 0.2, ez], fov: 27, fit: [env.w * 1.3, env.h * 2.2] }) },
-    { at: 2.9, shot: shot({ position: [-0.6, 0.42, 4.6], target: [0, 1.5, ARCH.z], fov: 46, fit: [3.0, 4.6] }) },
-    { at: 4.8, shot: shot({ position: [-0.3, 0.5, 3.4], target: [0, 1.6, ARCH.z], fov: 44, fit: [2.8, 4.4] }) },
-    { at: 6.8, shot: shot({ position: [0.05, 0.82, 2.9], target: [0, 1.05, -1.9], fov: 40, fit: [2.0, 2.4] }) },
+    // `fit` only ever pulls the camera back, so the gate starts close: on phones the envelope
+    // overfills the screen; wider screens back off until the whole card shows.
+    { at: 0, shot: shot({ position: [ex, ey + lift, ez + 3.5], target: [ex, ey + lift, ez], fov: 27, fit: gate }) },
+    { at: 0.9, shot: shot({ position: [ex, ey + 0.02, ez + 3.0], target: [ex, ey, ez], fov: 27, fit: [gate[0] * 0.86, gate[1] * 0.86] }) },
+    { at: 2.1, shot: shot({ position: [ex, ey, ez + 2.2], target: [ex, ey, ez], fov: 28, fit: [gate[0] * 0.66, gate[1] * 0.66] }) },
+    { at: VEIL.full, shot: shot({ position: [ex, ey, ez + 0.9], target: [ex, ey, ez], fov: 30, fit: [env.w * 0.4, env.h * 0.4] }) },
+    { at: VEIL.full + 0.05, shot: shot({ position: [0, 3.2, 6.6], target: [0, 1.9, ARCH.z], fov: 36, fit: [3.3, 5.0] }) },
+    { at: 4.9, shot: shot({ position: [-0.35, 1.6, 4.4], target: [0, 1.5, ARCH.z], fov: 40, fit: [2.9, 4.5] }) },
+    { at: 6.7, shot: shot({ position: [0.1, 2.3, 4.6], target: [0, 1.8, ARCH.z + 0.2], fov: 36, fit: [2.6, 4.2] }) },
     { at: 8.0, shot: S3 },
   ];
 }

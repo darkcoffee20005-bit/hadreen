@@ -1,14 +1,15 @@
 import { useId } from 'react';
 import type { SceneView } from '@/lib/invite/scene-types';
-import { archOutline, ARCH, leafLayout, roseLayout } from './layout';
+import { archOutline, ARCH, leafLayout, rng, roseLayout } from './layout';
 import { BEAK_PATH, SWAN_PATH } from './SwanHeart';
 
 /**
- * The Sacred Garden without WebGL: the same garden as the 3D scene, in SVG and CSS.
- *  Gate: a blush envelope (gilded double rule, corner rosettes, folds) sealed with wine wax.
- *  Opening (3 s): the seal splits in two, the flap turns on rotateX and shows its wine liner,
- *  the envelope sinks away while the garden fades up and two swans glide in to form the heart.
- *  Backdrop: golden-hour sky, cypress and palms, a rose hedge, the arch over the pool, the swans.
+ * The Sacred Garden without WebGL: the same morning garden as the 3D scene, in SVG and CSS.
+ *  Gate: an ivory envelope (four flaps folded to a diamond, blind-embossed flowering sprays)
+ *  under a wine wax seal; full-bleed on phones, a card on wide screens.
+ *  Opening (3 s): the seal warms and splits, the four flaps fold open one after another, warm
+ *  light pours out and whites out the envelope; the garden fades up and two swans glide in.
+ *  Backdrop: hazy cream sky, soft far trees, a pale pool under the cusped rose arch, the swans.
  * Under prefers-reduced-motion nothing moves: the envelope fades out and the garden fades in.
  */
 export const OPENING_MS = 3000;
@@ -21,25 +22,63 @@ const ROSES = roseLayout(90).filter((r) => r.facing[2] > 0.2);
 const LEAVES = leafLayout(ROSES, 40).filter((l) => l.facing[2] > 0.2);
 const PLINTHS = [-1, 1].map((s) => s * (ARCH.a + ARCH.t / 2));
 
-/** Background layer units: the waterline sits at y=800 of a 1600×1000 box anchored to the bottom. */
-/** The hedge as seen in 2D: tall behind the arch (above its apex at every screen shape), stepping down at the sides. */
-const hedgeTop = (x: number) => {
-  const a = Math.abs(x - 800);
-  const s = (e0: number, e1: number) => {
-    const t = Math.min(1, Math.max(0, (a - e0) / (e1 - e0)));
-    return t * t * (3 - 2 * t);
-  };
-  return 300 - 110 * s(560, 520) - 95 * s(300, 270);
-};
-const HEDGE_PATH = (() => {
-  const pts: string[] = [];
-  for (let x = 0; x <= 1600; x += 8) pts.push(`${x} ${hedgeTop(x).toFixed(1)}`);
-  return `M0 800L${pts.join('L')}L1600 800Z`;
+/** Background layer: the waterline sits at y=800 of a 1600×1000 box anchored to the bottom. */
+const tree = (x: number, base: number, h: number, w: number) =>
+  `M${x - w} ${base}C${x - w * 1.1} ${base - h * 0.6} ${x - w * 0.5} ${base - h} ${x} ${base - h}C${x + w * 0.5} ${base - h} ${x + w * 1.1} ${base - h * 0.6} ${x + w} ${base}Z`;
+const TREES = (() => {
+  const rand = rng(19);
+  const out: string[] = [];
+  for (let x = -40; x <= 1640; x += 46) {
+    if (Math.abs(x - 800) < 330) continue;
+    out.push(tree(x + (rand() - 0.5) * 30, 790, 90 + rand() * 110, 34 + rand() * 22));
+  }
+  return out;
 })();
-const cypress = (x: number, base: number, h: number, w: number) =>
-  `M${x - w} ${base}C${x - w} ${base - h * 0.55} ${x - w * 0.4} ${base - h * 0.86} ${x} ${base - h}C${x + w * 0.4} ${base - h * 0.86} ${x + w} ${base - h * 0.55} ${x + w} ${base}Z`;
-const CYPRESS_FAR = [-660, -520, -380, -250, 250, 380, 520, 660].map((dx, i) => cypress(800 + dx, 800, 780 + (i % 3) * 70, 48));
-const CYPRESS_NEAR = [-560, -430, 430, 560].map((dx, i) => cypress(800 + dx, 810, 600 + (i % 2) * 60, 58));
+
+/** Flowering sprays for the paper's blind emboss, in a 100×200 (portrait) envelope space. */
+function sprayPaths(x: number, y: number, angle: number, length: number, size: number, seed: number) {
+  const rand = rng(seed);
+  const bend = (rand() - 0.5) * 0.9;
+  const at = (s: number) => {
+    const a = angle + bend * s * s;
+    const d = s * length;
+    return [x + Math.cos(a) * d, y + Math.sin(a) * d, a] as const;
+  };
+  let stem = '';
+  for (let s = 0; s <= 1.0001; s += 0.05) {
+    const [px, py] = at(s);
+    stem += `${s === 0 ? 'M' : 'L'}${px.toFixed(1)} ${py.toFixed(1)}`;
+  }
+  const blobs: string[] = [];
+  for (let s = 0.1; s < 0.98; s += 0.11) {
+    const [px, py, a] = at(s);
+    const side = Math.round(s / 0.11) % 2 ? 1 : -1;
+    const la = a + side * 0.8;
+    const l = size * (1.6 + rand() * 0.6);
+    const tx = px + Math.cos(la) * l;
+    const ty = py + Math.sin(la) * l;
+    const nx = -Math.sin(la) * l * 0.3;
+    const ny = Math.cos(la) * l * 0.3;
+    const mx = (px + tx) / 2;
+    const my = (py + ty) / 2;
+    blobs.push(`M${px.toFixed(1)} ${py.toFixed(1)}Q${(mx + nx).toFixed(1)} ${(my + ny).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}Q${(mx - nx).toFixed(1)} ${(my - ny).toFixed(1)} ${px.toFixed(1)} ${py.toFixed(1)}Z`);
+  }
+  const [ex, ey] = at(1);
+  const r = size * 0.9;
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2;
+    const cx = ex + Math.cos(a) * r * 0.7;
+    const cy = ey + Math.sin(a) * r * 0.7;
+    blobs.push(`M${(cx - r * 0.5).toFixed(1)} ${cy.toFixed(1)}a${(r * 0.5).toFixed(1)} ${(r * 0.5).toFixed(1)} 0 1 0 ${r.toFixed(1)} 0a${(r * 0.5).toFixed(1)} ${(r * 0.5).toFixed(1)} 0 1 0 ${(-r).toFixed(1)} 0`);
+  }
+  return { stem, leaves: blobs.join('') };
+}
+const SPRAYS = [
+  sprayPaths(10, 197, -Math.PI / 2 + 0.1, 84, 3.4, 3),
+  sprayPaths(90, 197, -Math.PI / 2 - 0.1, 84, 3.4, 13),
+  sprayPaths(10, 3, Math.PI / 2 - 0.1, 70, 3.2, 5),
+  sprayPaths(90, 3, Math.PI / 2 + 0.1, 70, 3.2, 15),
+];
 
 const PETALS = Array.from({ length: 12 }, (_, i) => ({
   left: `${(i * 37 + 11) % 100}%`,
@@ -54,19 +93,36 @@ const CSS = `
 .sg2d-scene svg{position:absolute;inset:0;width:100%;height:100%}
 .sg2d-petal{position:absolute;top:-3%;width:11px;height:8px;border-radius:70% 30% 70% 30%;opacity:.85;animation:sg2d-fall linear infinite}
 @keyframes sg2d-fall{0%{transform:translate3d(0,0,0) rotate(0deg) scale(var(--s))}50%{transform:translate3d(var(--dx),52svh,0) rotate(200deg) scale(var(--s))}100%{transform:translate3d(0,106svh,0) rotate(420deg) scale(var(--s))}}
-.sg2d-reveal{opacity:0;transition:opacity 1.2s ease .95s}
+.sg2d-reveal{opacity:0;transition:opacity 1.1s ease 2.05s}
 .sg2d-gate.is-open~.sg2d-reveal,.sg2d-reveal.is-open{opacity:1}
-.sg2d-swan{transition:transform 1.35s cubic-bezier(.2,.7,.3,1) 1.45s,opacity .6s ease 1.45s}
+.sg2d-swan{transition:transform 1.3s cubic-bezier(.2,.7,.3,1) 2.1s,opacity .6s ease 2.1s}
 .sg2d-reveal:not(.is-open) .sg2d-swan-l{transform:translateX(-150px);opacity:0}
 .sg2d-reveal:not(.is-open) .sg2d-swan-r{transform:translateX(150px);opacity:0}
-.sg2d-wrap{perspective:1100px}
-.sg2d-env{position:relative;transform-style:preserve-3d;transition:transform .85s cubic-bezier(.55,0,.9,.45) 1.3s,opacity .5s ease 1.62s}
-.sg2d-gate.is-open .sg2d-env{transform:translateY(70svh) rotate(-4deg);opacity:0}
-.sg2d-flap{position:absolute;inset-inline:0;top:0;transform-origin:50% 0;transform-style:preserve-3d;transition:transform .95s cubic-bezier(.6,0,.3,1) .45s}
+.sg2d-env{position:fixed;inset:0;z-index:-5;perspective:1400px;transition:opacity .6s ease 2.15s}
+.sg2d-gate.is-open .sg2d-env{opacity:0}
+@media (min-aspect-ratio:17/20){.sg2d-env{inset:auto;left:50%;top:50%;width:min(64vw,128svh);aspect-ratio:172/112;translate:-50% -50%;box-shadow:0 40px 80px -40px rgba(90,40,30,.45)}}
+.sg2d-inner{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,#fff8ea,#f6e3d4 70%);opacity:0;transition:opacity 1s ease-in 1.3s}
+.sg2d-gate.is-open .sg2d-inner{opacity:1}
+.sg2d-glow{position:absolute;left:50%;top:50%;width:30%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,#fff4de,rgba(255,228,190,.6) 40%,rgba(255,220,180,0) 70%);opacity:0;transition:transform 1.2s ease-in 1.3s,opacity .8s ease 1.2s}
+.sg2d-gate.is-open .sg2d-glow{opacity:1;transform:scale(9)}
+.sg2d-flap{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .95s cubic-bezier(.6,0,.3,1)}
 .sg2d-flap>svg{position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden}
 .sg2d-flap>svg.back{transform:rotateX(180deg)}
-.sg2d-gate.is-open .sg2d-flap{transform:rotateX(178deg)}
-.sg2d-half{position:absolute;inset:0;transition:transform .8s cubic-bezier(.3,0,.7,1),opacity .45s ease .35s}
+.sg2d-flap.side>svg.back{transform:rotateY(180deg)}
+.sg2d-top{transform-origin:50% 0;transition-delay:.7s}
+.sg2d-bottom{transform-origin:50% 100%;transition-delay:.85s}
+.sg2d-left{transform-origin:0 50%;transition-delay:1s}
+.sg2d-right{transform-origin:100% 50%;transition-delay:1.08s}
+.sg2d-gate.is-open .sg2d-top{transform:rotateX(-176deg)}
+.sg2d-gate.is-open .sg2d-bottom{transform:rotateX(176deg)}
+.sg2d-gate.is-open .sg2d-left{transform:rotateY(176deg)}
+.sg2d-gate.is-open .sg2d-right{transform:rotateY(-176deg)}
+.sg2d-emboss{display:block}
+@media (min-aspect-ratio:17/20){.sg2d-emboss{display:none}}
+.sg2d-seal{position:absolute;left:50%;top:50%;width:min(30vw,15svh);aspect-ratio:1;translate:-50% -50%;z-index:5}
+@media (min-aspect-ratio:17/20){.sg2d-seal{width:19%}}
+.sg2d-half{position:absolute;inset:0;transition:transform .8s cubic-bezier(.3,0,.7,1) .55s,opacity .45s ease .85s,filter .5s ease}
+.sg2d-gate.is-open .sg2d-half{filter:drop-shadow(0 0 10px rgba(255,170,110,.9)) brightness(1.15)}
 .sg2d-gate.is-open .sg2d-half-a{transform:translate(-38%,95%) rotate(-28deg);opacity:0}
 .sg2d-gate.is-open .sg2d-half-b{transform:translate(38%,105%) rotate(24deg);opacity:0}
 .sg2d-glint{position:absolute;inset:0;border-radius:50%;overflow:hidden}
@@ -75,8 +131,9 @@ const CSS = `
 .sg2d-gate.is-open .sg2d-glint{opacity:0}
 @media (prefers-reduced-motion:reduce){
   .sg2d-gate *,.sg2d-reveal *,.sg2d-gate,.sg2d-reveal{transition-property:opacity!important;animation:none!important}
-  .sg2d-gate.is-open .sg2d-env,.sg2d-gate.is-open .sg2d-flap,.sg2d-gate.is-open .sg2d-half-a,.sg2d-gate.is-open .sg2d-half-b{transform:none}
+  .sg2d-gate.is-open .sg2d-flap,.sg2d-gate.is-open .sg2d-half-a,.sg2d-gate.is-open .sg2d-half-b,.sg2d-gate.is-open .sg2d-glow{transform:none}
   .sg2d-gate.is-open .sg2d-env{transition-delay:0s!important;transition-duration:1.1s!important}
+  .sg2d-reveal{transition-delay:0s!important}
   .sg2d-reveal:not(.is-open) .sg2d-swan-l,.sg2d-reveal:not(.is-open) .sg2d-swan-r{transform:none}
   .sg2d-petal,.sg2d-glint{display:none}
 }
@@ -90,15 +147,16 @@ function useIds() {
 function colors(view: SceneView) {
   const s = view.palette.scene;
   return {
-    paper: s.paper ?? '#F2DED6',
-    seal: s.seal ?? '#6B1626',
-    stone: s.stone ?? '#DCCDB9',
-    rose: s.rose ?? '#D98A97',
-    leaf: s.leaf ?? '#5E7A55',
-    pond: s.pond ?? '#2E4B47',
-    sun: s.sun ?? '#FFC98A',
-    skyTop: s.skyTop ?? '#F6D2A2',
-    skyLow: s.skyLow ?? '#E8A79E',
+    paper: s.paper ?? '#F3EADF',
+    blush: s.blush ?? '#EBC9C3',
+    seal: s.seal ?? '#6E1A2A',
+    stone: s.stone ?? '#EEE4D5',
+    rose: s.rose ?? '#E7B3AE',
+    leaf: s.leaf ?? '#93A583',
+    pond: s.pond ?? '#AFC0B6',
+    sun: s.sun ?? '#FFE9C9',
+    skyTop: s.skyTop ?? '#F1E6DC',
+    skyLow: s.skyLow ?? '#FAF1E6',
     gold: view.palette.gold,
     goldInk: view.palette.goldInk,
   };
@@ -106,75 +164,51 @@ function colors(view: SceneView) {
 type Colors = ReturnType<typeof colors>;
 const mix = (a: string, b: string, pct: number) => `color-mix(in srgb, ${a} ${100 - pct}%, ${b})`;
 
-/** The whole garden: sky, trees, hedge, pool, arch with roses, the swans' heart and petals. */
+/** The whole garden: hazy sky, far trees, pale pool, the cusped arch with roses, the swans' heart and petals. */
 function GardenScene({ c, className = '', open = true }: { c: Colors; className?: string; open?: boolean }) {
   const id = useIds();
-  const roseTones = [mix(c.rose, '#ffffff', 45), mix(c.rose, '#ffffff', 20), c.rose, mix(c.rose, c.seal, 35), '#F6E7DA'];
+  const roseTones = [mix(c.rose, '#ffffff', 55), mix(c.rose, '#ffffff', 30), c.rose, '#FBF3EA', '#F4E6D6'];
   return (
     <div className={`sg2d-scene ${className} ${open ? 'is-open' : ''}`} aria-hidden="true">
       <svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax slice">
         <defs>
           <linearGradient id={id('sky')} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor={mix(c.skyLow, '#A3849C', 40)} />
-            <stop offset="0.42" stopColor={mix(c.skyLow, c.skyTop, 25)} />
-            <stop offset="0.8" stopColor={mix(c.skyTop, c.sun, 45)} />
+            <stop offset="0" stopColor={mix(c.skyTop, '#C9CFD6', 30)} />
+            <stop offset="0.5" stopColor={c.skyTop} />
+            <stop offset="0.8" stopColor={mix(c.skyLow, '#ffffff', 35)} />
           </linearGradient>
           <radialGradient id={id('sun')}>
-            <stop offset="0" stopColor="#FFF6E6" />
-            <stop offset="0.08" stopColor={mix(c.sun, '#ffffff', 30)} />
-            <stop offset="0.35" stopColor={c.sun} stopOpacity="0.45" />
+            <stop offset="0" stopColor="#FFFBF2" />
+            <stop offset="0.3" stopColor={c.sun} stopOpacity="0.55" />
             <stop offset="1" stopColor={c.sun} stopOpacity="0" />
           </radialGradient>
           <linearGradient id={id('pool')} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor={mix(c.pond, '#000000', 45)} />
-            <stop offset="1" stopColor={mix(c.pond, '#000000', 62)} />
+            <stop offset="0" stopColor={mix(c.skyLow, c.pond, 25)} />
+            <stop offset="1" stopColor={mix(c.pond, '#ffffff', 25)} />
           </linearGradient>
-          <linearGradient id={id('hedge')} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor={mix(mix(c.leaf, c.pond, 30), '#000000', 18)} />
-            <stop offset="1" stopColor={mix(mix(c.leaf, c.pond, 30), '#000000', 55)} />
+          <linearGradient id={id('lawn')} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={mix(c.leaf, c.skyLow, 70)} />
+            <stop offset="1" stopColor={mix(c.leaf, c.skyLow, 45)} />
           </linearGradient>
         </defs>
         <rect width="1600" height="800" fill={`url(#${id('sky')})`} />
-        <circle cx="1030" cy="420" r="520" fill={`url(#${id('sun')})`} />
-        <g fill={mix(mix(c.leaf, c.pond, 30), c.skyTop, 18)} opacity="0.72">
-          {CYPRESS_FAR.map((d, i) => (
+        <circle cx="900" cy="560" r="560" fill={`url(#${id('sun')})`} />
+        <g fill={mix(c.leaf, c.skyLow, 62)}>
+          {TREES.map((d, i) => (
             <path key={i} d={d} />
           ))}
         </g>
-        <path d={HEDGE_PATH} fill={`url(#${id('hedge')})`} />
-        <path d={HEDGE_PATH} fill="none" stroke={mix(c.sun, '#ffffff', 30)} strokeOpacity="0.35" strokeWidth="2" />
-        <g>
-          {Array.from({ length: 60 }, (_, i) => {
-            const x = (i * 263) % 1600;
-            const top = hedgeTop(x);
-            const y = top + 20 + (((i * 97) % 100) / 100) * (800 - top - 40) * 0.7;
-            if (Math.abs(x - 800) < 300) return null;
-            return (
-              <g key={i} fill={roseTones[i % roseTones.length]} opacity="0.8">
-                <circle cx={x} cy={y} r={5} />
-                <circle cx={x + 8} cy={y + 5} r={4} />
-                <circle cx={x - 4} cy={y + 9} r={3.5} />
-              </g>
-            );
-          })}
-        </g>
-        <g fill={mix(mix(c.leaf, c.pond, 30), '#000000', 30)}>
-          {CYPRESS_NEAR.map((d, i) => (
-            <path key={i} d={d} />
-          ))}
-        </g>
+        <rect y="760" width="1600" height="42" fill={`url(#${id('lawn')})`} />
         <rect y="800" width="1600" height="200" fill={`url(#${id('pool')})`} />
-        <path d={HEDGE_PATH} fill={mix(c.pond, '#000000', 30)} opacity="0.55" transform="translate(0 1600) scale(1 -1)" />
-        <rect y="797" width="1600" height="6" fill={mix(c.stone, '#000000', 45)} />
-        <ellipse cx="1030" cy="860" rx="150" ry="60" fill={`url(#${id('sun')})`} opacity="0.5" />
+        <rect y="797" width="1600" height="6" fill={mix(c.stone, '#000000', 12)} />
       </svg>
 
       <svg viewBox="-190 -600 380 775" preserveAspectRatio="xMidYMax meet">
         <defs>
           <linearGradient id={id('stone')} x1="0" y1="-560" x2="0" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor={mix(c.stone, '#ffffff', 15)} />
+            <stop offset="0" stopColor={mix(c.stone, '#ffffff', 25)} />
             <stop offset="0.85" stopColor={c.stone} />
-            <stop offset="1" stopColor={mix(c.stone, c.pond, 45)} />
+            <stop offset="1" stopColor={mix(c.stone, c.pond, 25)} />
           </linearGradient>
           <linearGradient id={id('fade')} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#fff" stopOpacity="0.45" />
@@ -185,17 +219,17 @@ function GardenScene({ c, className = '', open = true }: { c: Colors; className?
           </mask>
         </defs>
         <g mask={`url(#${id('reflect')})`}>
-          <g transform="scale(1 -1)" opacity="0.7">
-            <path d={ARCH_PATH} fill={mix(c.stone, c.pond, 35)} />
+          <g transform="scale(1 -1)" opacity="0.6">
+            <path d={ARCH_PATH} fill={mix(c.stone, c.pond, 20)} />
           </g>
         </g>
-        <path d={ARCH_PATH} fill={`url(#${id('stone')})`} stroke={mix(c.stone, '#000000', 30)} strokeWidth="1" />
+        <path d={ARCH_PATH} fill={`url(#${id('stone')})`} stroke={mix(c.stone, '#000000', 14)} strokeWidth="1" />
         {PLINTHS.map((x) => (
-          <rect key={x} x={x * M - 32} y={-42} width={64} height={46} fill={mix(c.stone, '#000000', 8)} stroke={mix(c.stone, '#000000', 30)} strokeWidth="1" />
+          <rect key={x} x={x * M - 32} y={-42} width={64} height={46} fill={mix(c.stone, '#000000', 4)} stroke={mix(c.stone, '#000000', 14)} strokeWidth="1" />
         ))}
         <g>
           {LEAVES.map((l, i) => (
-            <ellipse key={i} cx={l.position[0] * M} cy={-l.position[1] * M} rx={l.scale * M * 0.18} ry={l.scale * M * 0.5} transform={`rotate(${((l.spin * 180) / Math.PI).toFixed(0)} ${(l.position[0] * M).toFixed(1)} ${(-l.position[1] * M).toFixed(1)})`} fill={mix(c.leaf, '#000000', 10 + (i % 3) * 10)} />
+            <ellipse key={i} cx={l.position[0] * M} cy={-l.position[1] * M} rx={l.scale * M * 0.18} ry={l.scale * M * 0.5} transform={`rotate(${((l.spin * 180) / Math.PI).toFixed(0)} ${(l.position[0] * M).toFixed(1)} ${(-l.position[1] * M).toFixed(1)})`} fill={mix(c.leaf, '#000000', (i % 3) * 8)} />
           ))}
           {ROSES.map((r, i) => {
             const cx = r.position[0] * M;
@@ -205,20 +239,18 @@ function GardenScene({ c, className = '', open = true }: { c: Colors; className?
             return (
               <g key={i}>
                 <circle cx={cx} cy={cy} r={rr} fill={tone} />
-                <circle cx={cx + rr * 0.08} cy={cy - rr * 0.05} r={rr * 0.58} fill="none" stroke={mix(tone, '#000000', 22)} strokeWidth={rr * 0.16} />
-                <circle cx={cx} cy={cy} r={rr * 0.22} fill={mix(tone, '#000000', 35)} />
+                <circle cx={cx + rr * 0.08} cy={cy - rr * 0.05} r={rr * 0.58} fill="none" stroke={mix(tone, '#7a3a3a', 22)} strokeWidth={rr * 0.14} />
+                <circle cx={cx} cy={cy} r={rr * 0.2} fill={mix(tone, '#7a3a3a', 30)} />
               </g>
             );
           })}
         </g>
-        <g transform="translate(0 0)">
-          <g mask={`url(#${id('reflect')})`}>
-            <g transform="translate(0 270) scale(1 -1)" opacity="0.8">
-              <SwanPair c={c} />
-            </g>
+        <g mask={`url(#${id('reflect')})`}>
+          <g transform="translate(0 270) scale(1 -1)" opacity="0.7">
+            <SwanPair c={c} />
           </g>
-          <SwanPair c={c} />
         </g>
+        <SwanPair c={c} />
       </svg>
 
       {PETALS.map((p, i) => (
@@ -237,7 +269,7 @@ function SwanPair({ c }: { c: Colors }) {
   const s = 1.85;
   const swan = (
     <>
-      <path d={SWAN_PATH} fill="#FBF7F1" stroke={mix(c.stone, '#000000', 25)} strokeWidth={0.5} />
+      <path d={SWAN_PATH} fill="#FFFCF7" stroke={mix(c.stone, '#000000', 18)} strokeWidth={0.5} />
       <path d={BEAK_PATH} fill="#D9692A" />
     </>
   );
@@ -260,63 +292,53 @@ export function Backdrop2D({ view }: { view: SceneView }) {
   );
 }
 
+/** One flap: a triangle of the face (front) with its blush lining behind; `points` in 100×200 space. */
+function Flap({ cls, points, face, lining, side = false }: { cls: string; points: string; face: string; lining: string; side?: boolean }) {
+  return (
+    <div className={`sg2d-flap ${cls} ${side ? 'side' : ''}`}>
+      <svg viewBox="0 0 100 200" preserveAspectRatio="none">
+        <polygon points={points} fill={face} stroke="rgba(150,118,92,0.35)" strokeWidth="0.35" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <svg className="back" viewBox="0 0 100 200" preserveAspectRatio="none">
+        <polygon points={points} fill={lining} />
+      </svg>
+    </div>
+  );
+}
+
 export function Gate2D({ view, opening }: { view: SceneView; opening: boolean }) {
   const c = colors(view);
   const id = useIds();
   const gold = c.gold;
-  const paper = mix(c.paper, c.rose, 8);
+  const lining = mix(c.blush, c.paper, 45);
   return (
     <>
       <style>{CSS}</style>
-      <div className={`sg2d-gate ${opening ? 'is-open' : ''} sg2d-wrap relative mx-auto w-[min(80vw,41svh)] [@media(min-aspect-ratio:17/20)]:w-[min(46vw,82svh)]`} aria-hidden="true">
-        <div className="sg2d-env aspect-[11/15] [@media(min-aspect-ratio:17/20)]:aspect-[162/106]">
-          <div className="absolute inset-0 rounded-[5px] shadow-[0_34px_70px_-24px_rgba(40,10,16,0.6)]" style={{ background: `linear-gradient(165deg, ${mix(paper, '#ffffff', 22)}, ${paper} 55%, ${mix(paper, c.rose, 18)})` }}>
-            <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M0 100L50 56L100 100" fill={mix(paper, '#ffffff', 25)} stroke={mix(gold, 'transparent', 55)} strokeWidth="0.4" vectorEffect="non-scaling-stroke" />
-              <path d="M0 0L50 56L0 100Z" fill="#000" opacity="0.03" />
-              <path d="M100 0L50 56L100 100Z" fill="#000" opacity="0.03" />
-            </svg>
-            <div className="absolute inset-[5%] rounded-[3px] border-[1.5px]" style={{ borderColor: mix(gold, 'transparent', 25) }} />
-            <div className="absolute inset-[7%] rounded-[2px] border" style={{ borderColor: mix(gold, 'transparent', 50) }} />
-            {[
-              ['5.6%', '5.6%'],
-              ['94.4%', '5.6%'],
-              ['5.6%', '94.4%'],
-              ['94.4%', '94.4%'],
-            ].map(([x, y]) => (
-              <svg key={`${x}${y}`} className="absolute aspect-square w-[9%] [@media(min-aspect-ratio:17/20)]:w-[6%]" style={{ left: x, top: y, transform: 'translate(-50%,-50%)' }} viewBox="-10 -10 20 20">
-                {Array.from({ length: 8 }, (_, k) => (
-                  <ellipse key={k} rx="4.4" ry="1.8" cx="4.6" fill={gold} transform={`rotate(${k * 45})`} />
-                ))}
-                <circle r="2.4" fill={mix(gold, '#ffffff', 20)} />
-              </svg>
+      <div className={`sg2d-gate ${opening ? 'is-open' : ''}`} aria-hidden="true">
+        <div className="sg2d-env" style={{ background: c.paper }}>
+          <div className="sg2d-inner" />
+          <div className="sg2d-glow" />
+          {/* Side flaps under, bottom over them, top over all — as an envelope is folded. */}
+          <Flap cls="sg2d-left" side points="0,0 50,100 0,200" face={mix(c.paper, '#000000', 2.5)} lining={lining} />
+          <Flap cls="sg2d-right" side points="100,0 50,100 100,200" face={mix(c.paper, '#000000', 2.5)} lining={lining} />
+          <Flap cls="sg2d-bottom" points="0,200 50,100 100,200" face={mix(c.paper, '#ffffff', 12)} lining={lining} />
+          <Flap cls="sg2d-top" points="0,0 100,0 50,100" face={mix(c.paper, '#ffffff', 22)} lining={lining} />
+          {/* Blind emboss: each spray twice, a soft shadow under a light highlight. */}
+          <svg className="sg2d-emboss pointer-events-none absolute inset-0 h-full w-full transition-opacity duration-300" style={{ opacity: opening ? 0 : 1 }} viewBox="0 0 100 200" preserveAspectRatio="none">
+            {SPRAYS.map((s, i) => (
+              <g key={i}>
+                <g transform="translate(0.25 0.4)" fill="rgba(140,108,84,0.16)" stroke="rgba(140,108,84,0.16)" strokeWidth="0.5">
+                  <path d={s.stem} fill="none" />
+                  <path d={s.leaves} stroke="none" />
+                </g>
+                <g fill="rgba(255,255,255,0.5)" stroke="rgba(255,255,255,0.5)" strokeWidth="0.5">
+                  <path d={s.stem} fill="none" />
+                  <path d={s.leaves} stroke="none" />
+                </g>
+              </g>
             ))}
-          </div>
-
-          <div className="sg2d-flap h-[46%] [@media(min-aspect-ratio:17/20)]:h-[58%]">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id={id('flap')} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor={mix(paper, '#ffffff', 30)} />
-                  <stop offset="1" stopColor={mix(paper, '#ffffff', 8)} />
-                </linearGradient>
-              </defs>
-              <path d="M0 0H100L53 97Q50 101 47 97Z" fill={`url(#${id('flap')})`} />
-              <path d="M5 2.5L50 90L95 2.5" fill="none" stroke={mix(gold, 'transparent', 20)} strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
-              <path d="M9 2.5L50 82L91 2.5" fill="none" stroke={mix(gold, 'transparent', 50)} strokeWidth="0.8" vectorEffect="non-scaling-stroke" />
-            </svg>
-            <svg className="back" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <pattern id={id('liner')} width="9" height="9" patternUnits="userSpaceOnUse">
-                  <rect width="9" height="9" fill={c.seal} />
-                  <circle cx="4.5" cy="4.5" r="2.1" fill="none" stroke={gold} strokeOpacity="0.5" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <path d="M0 0H100L53 97Q50 101 47 97Z" fill={`url(#${id('liner')})`} />
-            </svg>
-          </div>
-
-          <div className="absolute left-1/2 top-[46%] aspect-square w-[26%] -translate-x-1/2 -translate-y-[38%] [@media(min-aspect-ratio:17/20)]:top-[58%] [@media(min-aspect-ratio:17/20)]:w-[19%]">
+          </svg>
+          <div className="sg2d-seal">
             {(['a', 'b'] as const).map((half) => (
               <div
                 key={half}
@@ -326,7 +348,7 @@ export function Gate2D({ view, opening }: { view: SceneView; opening: boolean })
                 <svg viewBox="-50 -50 100 100" className="h-full w-full">
                   <defs>
                     <radialGradient id={id(`wax-${half}`)} cx="0.38" cy="0.32" r="0.75">
-                      <stop offset="0" stopColor={mix(c.seal, '#ffffff', 28)} />
+                      <stop offset="0" stopColor={mix(c.seal, '#ffffff', 22)} />
                       <stop offset="0.55" stopColor={c.seal} />
                       <stop offset="1" stopColor={mix(c.seal, '#000000', 35)} />
                     </radialGradient>

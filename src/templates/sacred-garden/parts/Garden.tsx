@@ -20,8 +20,8 @@ import { useInviteStore } from '@/lib/invite/machine';
 import type { Tier } from '@/lib/invite/quality/tiers';
 import { mixHex, shadeHex } from '@/lib/invite/stage/color';
 import { grassMap, leafNormal, stoneNormal } from '../art';
-import { buildArch, buildCypress, buildDeck, buildHedge, buildLawn, buildLeaf, buildPalm, buildRose, buildSwan, buildVines, type Detail } from '../geometry';
-import { HEDGE, hedgeRoseLayout, leafLayout, roseLayout, rng, swanPlacement, type LeafSpot, type RoseSpot } from '../layout';
+import { buildArch, buildCypress, buildDeck, buildLawn, buildLeaf, buildPalm, buildRose, buildSwan, buildVines, type Detail } from '../geometry';
+import { leafLayout, roseLayout, rng, swanPlacement, type LeafSpot, type RoseSpot } from '../layout';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export interface GardenColors {
@@ -62,14 +62,13 @@ export function detailFor(tier: Tier): Detail {
   return tier === 'low' ? 'low' : tier === 'medium' ? 'medium' : 'high';
 }
 
-/** Cypress rows lining the pool, and a stand of taller ones behind the hedge. */
+/** Cypress rows lining the pool, and a loose, hazy stand far beyond its end. */
 function cypressSpots(): { x: number; z: number; h: number }[] {
   const rand = rng(7);
   const out: { x: number; z: number; h: number }[] = [];
   for (const side of [-1, 1]) for (let z = -7.6; z <= 6.5; z += 2.35) out.push({ x: side * (5.2 + rand() * 0.25), z, h: 5.6 + rand() * 1.8 });
-  for (let x = -10.5; x <= 10.5; x += 2.1) if (Math.abs(x) > 1.2) out.push({ x: x + (rand() - 0.5) * 0.6, z: -11.2 - rand() * 1.5, h: 7.2 + rand() * 2.6 });
-  // A pair flanking the far end of the pool, just outside the arch's view through it.
-  for (const side of [-1, 1]) out.push({ x: side * 2.55, z: -7.4, h: 5.4 + rand() * 0.4 }, { x: side * 3.9, z: -7.9, h: 4.6 + rand() * 0.5 });
+  // Far beyond the pool, only off to the sides: the view through the arch stays open haze.
+  for (let x = -22; x <= 22; x += 1.6) if (Math.abs(x) > 7.5) out.push({ x: x + (rand() - 0.5) * 0.8, z: -17 - rand() * 5, h: 2.6 + rand() * 2.2 });
   return out;
 }
 
@@ -80,7 +79,6 @@ export function useGardenAssets(colors: GardenColors, tier: Tier) {
     const roseCount = detail === 'low' ? 70 : detail === 'medium' ? 120 : 160;
     const roses = roseLayout(roseCount);
     const leaves = leafLayout(roses, detail === 'low' ? 60 : 160);
-    const hedgeRoses = hedgeRoseLayout(detail === 'low' ? 70 : detail === 'medium' ? 150 : 220);
     const cypress = cypressSpots();
     const palmParts = [
       buildPalm(9.5, 3, '#6E5B45', shadeHex(colors.leaf, 0.8), detail).translate(-8.2, 0, -13),
@@ -94,20 +92,17 @@ export function useGardenAssets(colors: GardenColors, tier: Tier) {
       deck: buildDeck(colors.stone),
       lawn: buildLawn(),
       rose: buildRose(detail),
-      roseSmall: buildRose('low'),
       leaf: buildLeaf(),
       vines: buildVines(shadeHex(colors.leaf, 0.85), detail),
-      cypress: buildCypress(mixHex(shadeHex(colors.leaf, 0.75), colors.pond, 0.3), detail),
-      hedge: buildHedge(30, 5, HEDGE.depth, mixHex(shadeHex(colors.leaf, 0.78), colors.pond, 0.3), detail),
+      // Pale sage: the cypresses are part of the morning haze, not dark silhouettes.
+      cypress: buildCypress(mixHex(mixHex(colors.leaf, colors.pond, 0.25), '#F3EEDF', 0.3), detail),
       palms,
       swan: buildSwan(detail),
     };
     const normal = typeof document === 'undefined' ? null : stoneNormal();
-    const grass = typeof document === 'undefined' ? null : grassMap(colors.leaf);
+    const grass = typeof document === 'undefined' ? null : grassMap(mixHex(colors.leaf, '#F3EEDF', 0.6));
     if (grass) grass.repeat.set(0.35, 0.35);
-    const leafy = typeof document === 'undefined' ? null : leafNormal();
-    const leafyTall = leafy?.clone() ?? null;
-    leafy?.repeat.set(26, 4);
+    const leafyTall = typeof document === 'undefined' ? null : leafNormal();
     leafyTall?.repeat.set(4, 9);
     const rich = detail !== 'low';
     const stone = (keep: 'above' | 'below') => clipAtWater(new MeshStandardMaterial({ vertexColors: true, normalMap: normal, normalScale: new Vector2(0.55, 0.55), roughness: 0.92 }), keep);
@@ -128,12 +123,12 @@ export function useGardenAssets(colors: GardenColors, tier: Tier) {
         : new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, side: DoubleSide }),
       leaf: new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, side: DoubleSide }),
       vine: new MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }),
-      hedge: new MeshStandardMaterial({ vertexColors: true, roughness: 0.9, normalMap: leafy, normalScale: new Vector2(0.9, 0.9) }),
       foliage: new MeshStandardMaterial({ vertexColors: true, roughness: 0.9, normalMap: leafyTall, normalScale: new Vector2(0.8, 0.8) }),
       palm: new MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: DoubleSide }),
-      lawn: new MeshStandardMaterial({ color: mixHex('#ffffff', colors.pond, 0.18), map: grass, roughness: 1 }),
+      // Backlit by the morning sun, so a little self-light keeps the far lawn pale in the haze.
+      lawn: new MeshStandardMaterial({ color: '#ffffff', map: grass, roughness: 1, emissive: '#EFE8D6', emissiveIntensity: 0.45 }),
     };
-    return { geometry, materials, roses, hedgeRoses, leaves, cypress, textures: [normal, grass, leafy, leafyTall], detail };
+    return { geometry, materials, roses, leaves, cypress, textures: [normal, grass, leafyTall], detail };
   }, [detail, colors.stone, colors.pond, colors.leaf, colors.rose]);
 
   useEffect(
@@ -197,30 +192,29 @@ function useLeafInstances(mesh: React.RefObject<InstancedMesh | null>, spots: Le
 }
 
 /**
- * The garden's set: arch with its roses, leaves and vines, the deck and lawn, cypress rows, the
- * hedge and palms. Rendered twice on medium/low: once for real and once mirrored under the
+ * The garden's set: arch with its roses, leaves and vines, the deck and lawn, cypress
+ * rows and palms in the haze. Rendered twice on medium/low: once for real and once mirrored under the
  * water (the cheap reflection); `mirrored` swaps in the clip-below materials and skips the lawn.
  */
 export function Garden({ assets, colors, mirrored = false }: { assets: GardenAssets; colors: GardenColors; mirrored?: boolean }) {
   const { geometry: g, materials: m } = assets;
   const roses = useRef<InstancedMesh>(null);
-  const hedgeRoses = useRef<InstancedMesh>(null);
   const leaves = useRef<InstancedMesh>(null);
   const cypress = useRef<InstancedMesh>(null);
   const ramp = useMemo(
     () => [
-      mixHex(colors.rose, '#ffffff', 0.5),
-      mixHex(colors.rose, '#ffffff', 0.25),
+      mixHex(colors.rose, '#ffffff', 0.6),
+      mixHex(colors.rose, '#ffffff', 0.35),
+      mixHex(colors.rose, '#ffffff', 0.15),
       colors.rose,
-      colors.rose,
-      shadeHex(colors.rose, 0.82),
-      mixHex(colors.rose, colors.seal, 0.4),
-      '#F6E7DA',
+      shadeHex(colors.rose, 0.9),
+      '#FBF4EA',
+      '#F4E6D6',
+      '#FFFFFF',
     ],
-    [colors.rose, colors.seal],
+    [colors.rose],
   );
   useRoseInstances(roses, assets.roses, ramp);
-  useRoseInstances(hedgeRoses, assets.hedgeRoses, ramp);
   useLeafInstances(leaves, assets.leaves, colors.leaf);
   useLayoutEffect(() => {
     const mesh = cypress.current;
@@ -245,8 +239,6 @@ export function Garden({ assets, colors, mirrored = false }: { assets: GardenAss
       <mesh geometry={g.vines} material={m.vine} />
       <mesh geometry={g.deck} material={mirrored ? m.stoneMirror : m.stone} />
       {!mirrored && <mesh geometry={g.lawn} material={m.lawn} />}
-      <mesh geometry={g.hedge} material={m.hedge} position={[0, 0.05, HEDGE.z]} />
-      <instancedMesh ref={hedgeRoses} args={[g.roseSmall, m.rose, assets.hedgeRoses.length]} frustumCulled={false} />
       <instancedMesh ref={cypress} args={[g.cypress, m.foliage, assets.cypress.length]} frustumCulled={false} />
       <mesh geometry={g.palms} material={m.palm} />
     </group>

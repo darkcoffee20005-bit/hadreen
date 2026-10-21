@@ -1,34 +1,34 @@
 {
-  "measuredAt": "2026-10-19T21:37:49.477Z",
+  "measuredAt": "2026-10-21T02:49:23.656Z",
   "base": "http://localhost:3100",
   "rows": [
     {
       "template": "sacred-garden",
       "budgetKB": 1200,
-      "kb3d": 1089,
-      "kb2d": 617,
-      "requests3d": 44,
+      "kb3d": 994,
+      "kb2d": 523,
+      "requests3d": 48,
       "gate": {
-        "calls": 55,
-        "triangles": 133951,
-        "geometries": 47,
-        "textures": 38,
-        "programs": 49
+        "calls": 52,
+        "triangles": 105311,
+        "geometries": 44,
+        "textures": 32,
+        "programs": 51
       },
       "content": {
-        "calls": 52,
-        "triangles": 137523,
-        "geometries": 47,
-        "textures": 38,
-        "programs": 51
+        "calls": 61,
+        "triangles": 107743,
+        "geometries": 45,
+        "textures": 32,
+        "programs": 53
       }
     },
     {
       "template": "blossom-oud",
       "budgetKB": 1400,
-      "kb3d": 1085,
-      "kb2d": 616,
-      "requests3d": 44,
+      "kb3d": 991,
+      "kb2d": 521,
+      "requests3d": 42,
       "gate": {
         "calls": 24,
         "triangles": 3199,
@@ -47,30 +47,30 @@
     {
       "template": "dolce-vita",
       "budgetKB": 1300,
-      "kb3d": 1080,
-      "kb2d": 616,
-      "requests3d": 43,
+      "kb3d": 985,
+      "kb2d": 522,
+      "requests3d": 40,
       "gate": {
         "calls": 67,
         "triangles": 283263,
         "geometries": 45,
         "textures": 33,
-        "programs": 50
+        "programs": 51
       },
       "content": {
         "calls": 79,
         "triangles": 284543,
         "geometries": 53,
         "textures": 36,
-        "programs": 52
+        "programs": 53
       }
     },
     {
       "template": "royal-gold",
       "budgetKB": 1400,
-      "kb3d": 1085,
-      "kb2d": 617,
-      "requests3d": 44,
+      "kb3d": 990,
+      "kb2d": 522,
+      "requests3d": 42,
       "gate": {
         "calls": 61,
         "triangles": 13238,
@@ -89,9 +89,9 @@
     {
       "template": "eternal-romance",
       "budgetKB": 1300,
-      "kb3d": 1080,
-      "kb2d": 616,
-      "requests3d": 47,
+      "kb3d": 985,
+      "kb2d": 521,
+      "requests3d": 45,
       "gate": {
         "calls": 46,
         "triangles": 124737,
@@ -110,9 +110,9 @@
     {
       "template": "destination-love",
       "budgetKB": 1300,
-      "kb3d": 1129,
-      "kb2d": 616,
-      "requests3d": 46,
+      "kb3d": 1014,
+      "kb2d": 521,
+      "requests3d": 43,
       "gate": {
         "calls": 30,
         "triangles": 26899,

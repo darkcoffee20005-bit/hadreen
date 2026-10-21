@@ -22,7 +22,7 @@ import {
   Vector3,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ARCH, archOutline, hedgeProfile, POOL, rng, smoothstep, SWAN_SCALE, vinePath, type V3 } from './layout';
+import { ARCH, archOutline, POOL, rng, smoothstep, SWAN_SCALE, vinePath, type V3 } from './layout';
 
 export type Detail = 'low' | 'medium' | 'high';
 type RGB = [number, number, number];
@@ -151,9 +151,9 @@ export function buildArch(stone: string, pond: string, detail: Detail): BufferGe
   const wet = lin(pond, 0.55);
   return paint(g, (x, y, z) => {
     const n = noise3(x * 3.1, y * 3.1, z * 3.1);
-    const grime = 1 - smoothstep(0.0, 0.5, y);
-    const k = 0.9 + n * 0.18 - (1 - smoothstep(-0.02, 0.06, y)) * 0.25;
-    return [0, 1, 2].map((i) => (base[i]! * (1 - grime * 0.55) + wet[i]! * grime * 0.55) * k) as RGB;
+    const grime = 1 - smoothstep(0.0, 0.4, y);
+    const k = 0.92 + n * 0.14 - (1 - smoothstep(-0.02, 0.06, y)) * 0.18;
+    return [0, 1, 2].map((i) => (base[i]! * (1 - grime * 0.3) + wet[i]! * grime * 0.3) * k) as RGB;
   });
 }
 
@@ -184,8 +184,8 @@ export function buildDeck(stone: string): BufferGeometry {
   const base = lin(stone);
   return paint(g, (px, py, pz) => {
     const tile = (Math.floor(px / 0.6) + Math.floor(pz / 0.6)) % 2 === 0 ? 1 : 0.94;
-    // The far end lies in the hedge's evening shade.
-    const shade = 1 - 0.68 * smoothstep(zFar + 1.4, zFar - 0.2, pz);
+    // The far end fades a little into the morning haze.
+    const shade = 1 - 0.12 * smoothstep(zFar + 1.4, zFar - 0.2, pz);
     const k = (py > 0.12 ? 0.92 : 0.78 * tile) * shade * (0.92 + noise3(px * 2, 0, pz * 2) * 0.12);
     return [base[0] * k, base[1] * k, base[2] * k];
   });
@@ -313,32 +313,6 @@ export function buildCypress(color: string, detail: Detail): BufferGeometry {
   return paint(g, (x, y, z) => {
     const k = (0.45 + 0.55 * smoothstep(0, 0.9, y)) * (0.8 + noise3(x * 40, y * 25, z * 40) * 0.4);
     return [c[0] * k, c[1] * k, c[2] * k];
-  });
-}
-
-/** A clipped hedge wall with an uneven, leafy face and top. Base at y=0, centred on x. */
-export function buildHedge(width: number, height: number, depth: number, color: string, detail: Detail): BufferGeometry {
-  const g = new BoxGeometry(width, height, depth, detail === 'low' ? 32 : 72, detail === 'low' ? 8 : 16, 1);
-  const pos = g.attributes.position!;
-  for (let i = 0; i < pos.count; i++) {
-    let x = pos.getX(i);
-    let y = pos.getY(i);
-    let z = pos.getZ(i);
-    const n = noise3(x * 1.4, y * 1.4, z * 1.4) + noise3(x * 4.1, y * 4.1, z * 4.1) * 0.5 - 0.75;
-    if (z > depth / 2 - 1e-3) z += n * 0.22;
-    if (y > height / 2 - 1e-3) y += n * 0.16;
-    x += n * 0.05;
-    pos.setXYZ(i, x, (y + height / 2) * (hedgeProfile(x) / height), z);
-  }
-  g.computeVertexNormals();
-  const c = lin(color);
-  const sun = lin('#E8C27A');
-  return paint(g, (x, y, z) => {
-    const top = hedgeProfile(x);
-    const clump = 0.78 + noise3(x * 0.9 + 3, y * 0.9, 1) * 0.4;
-    const k = (0.45 + 0.55 * smoothstep(0, top, y)) * (0.72 + noise3(x * 6, y * 6, z * 6) * 0.5) * clump;
-    const rim = smoothstep(top - 0.35, top + 0.1, y) * 0.35;
-    return [0, 1, 2].map((i) => c[i]! * k * (1 - rim) + sun[i]! * rim * 0.6) as RGB;
   });
 }
 
