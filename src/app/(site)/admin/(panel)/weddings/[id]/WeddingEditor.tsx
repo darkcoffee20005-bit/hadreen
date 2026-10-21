@@ -14,7 +14,7 @@ import { contrastIssues, resolvePalette } from '@/lib/palette';
 import type { WeddingFormInput } from '@/lib/validation/wedding';
 import type { PublicWedding } from '@/lib/wedding-types';
 import { getTemplate, TEMPLATES } from '@/templates';
-import { importGuestsAdminAction, saveWeddingAction } from '../../../actions';
+import { importGuestsAdminAction, rotateCouplePinAction, saveWeddingAction } from '../../../actions';
 
 const NIKKAH_VERSE =
   'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً';
@@ -65,12 +65,15 @@ export function WeddingEditor({
   initial,
   guestCount,
   dashboardLink,
+  pin = '',
   justCreated = false,
 }: {
   id: string | null;
   initial: WeddingFormInput;
   guestCount: number;
   dashboardLink: string | null;
+  /** The couple's dashboard code. */
+  pin?: string;
   /** Arrived here right after creating the wedding: keep the confirmation visible. */
   justCreated?: boolean;
 }) {
@@ -422,6 +425,23 @@ export function WeddingEditor({
                 </a>
               )}
             </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <p>
+                رمز لوحة العروسين: <bdi dir="ltr" className="font-medium tracking-widest">{pin || '—'}</bdi>
+              </p>
+              <button
+                type="button"
+                className={ui.ghost}
+                onClick={async () => {
+                  if (!window.confirm('رمز جديد؟ الرمز القديم يبطل، والعرسان لازم يكتبون الرمز الجديد.')) return;
+                  await rotateCouplePinAction(id);
+                  router.refresh();
+                }}
+              >
+                رمز جديد
+              </button>
+            </div>
+            <p className="text-xs text-ink-soft">دزّوا للعرسان الرابط والرمز، كل واحد برسالة.</p>
           </Section>
         )}
       </div>

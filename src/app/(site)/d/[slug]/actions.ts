@@ -2,7 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { parseGuestsCsv, type CsvIssue } from '@/lib/csv';
-import { coupleSecretFromCookie } from '@/lib/session';
+import { headers } from 'next/headers';
+import { coupleAccess, coupleWedding } from '@/lib/couple-access';
+import { clientIp, limits } from '@/lib/ratelimit';
+import { rememberCouplePin } from '@/lib/session';
+import { safeEqual } from '@/lib/tokens';
 import { guestInputSchema, type GuestInput } from '@/lib/validation/guest';
 import {
   addGuest,
@@ -11,13 +15,30 @@ import {
   importGuests,
   rotateGuestToken,
   updateGuest,
-  weddingForCouple,
 } from '@/lib/weddings';
 
 export type ActionResult = { ok: true } | { ok: false; error: 'UNAUTHORIZED' | 'INVALID_INPUT' | 'NOT_FOUND' };
 
 async function authorize(slug: string) {
-  return weddingForCouple(slug, await coupleSecretFromCookie());
+  return coupleWedding(slug);
+}
+
+export type UnlockResult = { ok: true } | { ok: false; error: 'WRONG' | 'LIMITED' | 'UNAUTHORIZED' };
+
+/** The dashboard code. Needs the secret link's cookie first; remembered in this browser after. */
+export async function unlockDashboardAction(slug: string, pin: string): Promise<UnlockResult> {
+  const access = await coupleAccess(slug);
+  if (access.state === 'denied') return { ok: false, error: 'UNAUTHORIZED' };
+  if (access.state === 'open') return { ok: true };
+  if (!(await limits.pinByIp(clientIp(await headers()))) || !(await limits.pinBySlug(slug))) {
+    return { ok: false, error: 'LIMITED' };
+  }
+  const code = String(pin).replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).trim();
+  const expected = access.wedding.couplePin;
+  if (!/^\d{6}$/.test(code) || !expected || !safeEqual(code, expected)) return { ok: false, error: 'WRONG' };
+  await rememberCouplePin(slug, expected);
+  revalidatePath(`/d/${slug}`);
+  return { ok: true };
 }
 
 function done(slug: string): ActionResult {

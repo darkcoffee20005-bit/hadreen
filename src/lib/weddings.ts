@@ -3,7 +3,7 @@ import type { Prisma, Wedding } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { demoSchedule } from '@/lib/demo';
 import { readOverrides } from '@/lib/palette';
-import { newCoupleSecret, newGuestToken, safeEqual } from '@/lib/tokens';
+import { newCouplePin, newCoupleSecret, newGuestToken, safeEqual } from '@/lib/tokens';
 import { readDressCode, readSchedule, type WeddingInput } from '@/lib/validation/wedding';
 import type { GuestInput } from '@/lib/validation/guest';
 import type { CsvGuestRow } from '@/lib/csv';
@@ -107,14 +107,14 @@ export async function saveWedding(input: WeddingInput, id?: string): Promise<Sav
   const data = weddingData(input);
   const w = id
     ? await db().wedding.update({ where: { id }, data })
-    : await db().wedding.create({ data: { ...data, coupleSecret: newCoupleSecret() } });
+    : await db().wedding.create({ data: { ...data, coupleSecret: newCoupleSecret(), couplePin: newCouplePin() } });
   return { ok: true, id: w.id, slug: w.slug };
 }
 
 /** Copies a wedding's details (not its guests) into a new draft with a fresh secret. */
 export async function duplicateWedding(id: string): Promise<Wedding> {
   const src = await db().wedding.findUniqueOrThrow({ where: { id } });
-  const { id: _id, createdAt: _c, updatedAt: _u, coupleSecret: _s, slug, ...rest } = src;
+  const { id: _id, createdAt: _c, updatedAt: _u, coupleSecret: _s, couplePin: _p, slug, ...rest } = src;
   let copySlug = `${slug.slice(0, 40)}-copy`;
   for (let n = 2; await db().wedding.findUnique({ where: { slug: copySlug } }); n++) {
     copySlug = `${slug.slice(0, 40)}-copy-${n}`;
@@ -129,8 +129,14 @@ export async function duplicateWedding(id: string): Promise<Wedding> {
       status: 'draft',
       isDemo: false,
       coupleSecret: newCoupleSecret(),
+      couplePin: newCouplePin(),
     },
   });
+}
+
+/** A new dashboard code; browsers unlocked with the old one have to type the new one. */
+export async function rotateCouplePin(id: string): Promise<void> {
+  await db().wedding.update({ where: { id }, data: { couplePin: newCouplePin() } });
 }
 
 // ---------------------------------------------------------------- guests

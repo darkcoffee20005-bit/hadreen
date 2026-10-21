@@ -11,7 +11,7 @@ Interactive 3D wedding invitations, Arabic-first. Six bespoke templates open lik
 |---|---|---|
 | Marketing site | `/` | 3D carousel of live template thumbnails, try-it phone, gallery with previews, price, FAQ. |
 | Invitation | `/i/<slug>`, personal: `?g=<token>` | Gate → 3D opening → content (countdown, programme, venue, map, calendar, dress code, RSVP). |
-| Couple dashboard | `/d/<slug>?k=<secret>` | Answers and seats, messages, per-guest links and QR, CSV import/export. |
+| Couple dashboard | `/d/<slug>?k=<secret>` + 6-digit code | Answers and seats, messages, per-guest links and QR, CSV import/export. |
 | Admin | `/admin` | Create, edit, preview, publish weddings; bulk guest import. |
 | Lab (dev only) | `/lab`, `/lab/<template>` | Leva panel: tier, phase, opening scrubber, scene tweaks, r3f-perf. |
 
@@ -72,7 +72,7 @@ DATABASE_URL=$E2E_DATABASE_URL SITE_URL=http://localhost:3100 NEXT_DIST_DIR=.nex
 2. **+ عرس جديد**: pick a template and colours, fill in the names, date (Baghdad time), venue, programme and dress code. The phone on the side previews unsaved changes.
 3. **حفظ ونشر** publishes it at `/i/<slug>`.
 4. Import guests from CSV (columns: name, seats, group, with Arabic or English headers). Each household gets a personal link `/i/<slug>?g=<token>`.
-5. Send the couple their dashboard link (**لوحة العروسين**, `/d/<slug>?k=<secret>`). There they see answers, copy a ready Arabic message per guest, show QR codes, and export a CSV.
+5. Send the couple their dashboard link (**لوحة العروسين**, `/d/<slug>?k=<secret>`) and, in a separate message, its 6-digit code (shown next to the link in `/admin`; **رمز جديد** replaces it and locks out browsers that had the old one). The link alone opens nothing: each browser asks for the code once. There they see answers, copy a ready Arabic message per guest, show QR codes, and export a CSV.
 
 ## How an invitation works
 

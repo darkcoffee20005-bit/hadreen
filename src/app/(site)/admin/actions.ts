@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { parseGuestsCsv, type CsvIssue } from '@/lib/csv';
@@ -9,7 +9,7 @@ import { clientIp, limits } from '@/lib/ratelimit';
 import { isAdmin, logInAdmin, logOutAdmin } from '@/lib/session';
 import { weddingInputSchema, type WeddingFormInput } from '@/lib/validation/wedding';
 import { weddingTag } from '@/lib/wedding-cache';
-import { duplicateWedding, existingGuestNames, importGuests, saveWedding } from '@/lib/weddings';
+import { duplicateWedding, existingGuestNames, importGuests, rotateCouplePin, saveWedding } from '@/lib/weddings';
 
 async function guard() {
   if (!(await isAdmin())) redirect('/admin/login');
@@ -65,6 +65,13 @@ export async function setStatusAction(id: string, status: 'draft' | 'live') {
   await guard();
   const w = await db().wedding.update({ where: { id }, data: { status }, select: { slug: true } });
   revalidateTag(weddingTag(w.slug));
+}
+
+export async function rotateCouplePinAction(id: string) {
+  await guard();
+  await rotateCouplePin(id);
+  revalidatePath('/admin');
+  revalidatePath(`/admin/weddings/${id}`);
 }
 
 export async function duplicateWeddingAction(id: string) {

@@ -3,20 +3,19 @@ import { loadDashboard } from '@/lib/dashboard';
 import { daysUntil, formatWeddingDate, formatWeddingTime } from '@/lib/date/format';
 import { siteUrl } from '@/lib/env';
 import { dashboardUrl } from '@/lib/links';
-import { coupleSecretFromCookie } from '@/lib/session';
-import { SLUG_RE } from '@/lib/validation/patterns';
-import { toPublicWedding, weddingForCouple, withLiveDates } from '@/lib/weddings';
+import { coupleAccess } from '@/lib/couple-access';
+import { toPublicWedding, withLiveDates } from '@/lib/weddings';
 import { Dashboard } from './Dashboard';
+import { PinGate } from './PinGate';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'لوحة العروسين', robots: { index: false, follow: false } };
 
 export default async function DashboardPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const secret = await coupleSecretFromCookie();
-  const row = SLUG_RE.test(slug) ? await weddingForCouple(slug, secret) : null;
+  const access = await coupleAccess(slug);
 
-  if (!row || !secret) {
+  if (access.state === 'denied') {
     return (
       <main className="grid min-h-svh place-items-center p-8 text-center">
         <div>
@@ -28,6 +27,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ slug
     );
   }
 
+  if (access.state === 'locked') {
+    return <PinGate slug={slug} names={`${access.wedding.groomName} و${access.wedding.brideName}`} />;
+  }
+
+  const { wedding: row, secret } = access;
   const wedding = withLiveDates(toPublicWedding(row));
   const { guests, totals } = await loadDashboard(row.id);
   const date = new Date(wedding.dateTimeUtc);

@@ -3,10 +3,8 @@ import { loadDashboard } from '@/lib/dashboard';
 import { zonedParts } from '@/lib/date/tz';
 import { siteUrl } from '@/lib/env';
 import { inviteUrl } from '@/lib/links';
-import { coupleSecretFromCookie } from '@/lib/session';
-import { SLUG_RE } from '@/lib/validation/patterns';
+import { coupleWedding } from '@/lib/couple-access';
 import type { GuestStatus } from '@/lib/wedding-types';
-import { weddingForCouple } from '@/lib/weddings';
 
 const STATUS: Record<GuestStatus, string> = {
   attending: 'حاضرين',
@@ -25,7 +23,7 @@ function stamp(iso: string | null): string {
 
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const wedding = SLUG_RE.test(slug) ? await weddingForCouple(slug, await coupleSecretFromCookie()) : null;
+  const wedding = await coupleWedding(slug);
   if (!wedding) return new Response('Unauthorized', { status: 401 });
 
   const { guests } = await loadDashboard(wedding.id);

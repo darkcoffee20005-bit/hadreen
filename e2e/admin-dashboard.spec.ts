@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createWeddingWithGuest, prisma } from './fixtures';
+import { createWeddingWithGuest, openDashboard, prisma } from './fixtures';
 
 test.afterAll(async () => {
   await prisma.$disconnect();
@@ -40,7 +40,7 @@ test('admin creates and publishes a wedding', async ({ page }) => {
 
 test('couple imports guests from CSV and exports them', async ({ page, request }) => {
   const { wedding } = await createWeddingWithGuest();
-  await page.goto(`/d/${wedding.slug}?k=${wedding.coupleSecret}`);
+  await openDashboard(page, wedding.slug, wedding.coupleSecret);
 
   await page.getByRole('button', { name: 'استيراد CSV' }).click();
   await page.getByLabel('أو الصقوا القائمة هنا').fill('الاسم,المقاعد,المجموعة\nبيت الحاج كريم,٥,أهل العروس\nعائلة أبو حسين,3,\n');
@@ -59,6 +59,26 @@ test('couple imports guests from CSV and exports them', async ({ page, request }
 
   // Without the couple's cookie there is nothing to download.
   expect((await request.get(`/d/${wedding.slug}/export.csv`)).status()).toBe(401);
+});
+
+test('dashboard asks for its code, and the link alone opens nothing', async ({ page }) => {
+  const { wedding } = await createWeddingWithGuest();
+  await page.goto(`/d/${wedding.slug}?k=${wedding.coupleSecret}`);
+  await expect(page.getByLabel('رمز اللوحة')).toBeVisible();
+  await expect(page.locator('[data-guest]')).toHaveCount(0);
+  expect((await page.request.get(`/d/${wedding.slug}/export.csv`)).status()).toBe(401);
+
+  await page.getByLabel('رمز اللوحة').fill('000000');
+  await page.getByRole('button', { name: 'فتح اللوحة' }).click();
+  await expect(page.getByText('الرمز غير صحيح.')).toBeVisible();
+
+  await page.getByLabel('رمز اللوحة').fill('١٢٣٤٥٦'); // Eastern Arabic digits work too
+  await page.getByRole('button', { name: 'فتح اللوحة' }).click();
+  await expect(page.locator('[data-guest]')).toHaveCount(1);
+
+  // Remembered in this browser.
+  await page.reload();
+  await expect(page.locator('[data-guest]')).toHaveCount(1);
 });
 
 test('dashboard rejects a wrong secret', async ({ page }) => {

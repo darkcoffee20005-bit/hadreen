@@ -62,6 +62,8 @@ model Wedding {
   destinationCity  String?
   status           WeddingStatus @default(draft)
   coupleSecret     String        @unique
+  /// 6-digit code the couple types once per browser to open their dashboard
+  couplePin        String        @default("")
   /// (+) demo ribbon and a rolling demo date
   isDemo           Boolean       @default(false)
   /// (+) seat cap for RSVPs through the generic link; 0 turns them off

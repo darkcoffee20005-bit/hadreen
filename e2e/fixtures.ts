@@ -33,6 +33,7 @@ export async function createWeddingWithGuest(overrides: { openRsvpMaxSeats?: num
       musicTrack: 'strings-qanun',
       status: 'live',
       coupleSecret: secret(),
+      couplePin: '123456',
       openRsvpMaxSeats: overrides.openRsvpMaxSeats ?? 2,
     },
   });
@@ -55,4 +56,11 @@ export async function createWeddingWithGuest(overrides: { openRsvpMaxSeats?: num
 export async function openInvitation(page: Page) {
   await page.getByRole('button', { name: 'افتحوا الدعوة' }).click();
   await expect(page.locator('[data-phase="content"]')).toBeVisible({ timeout: 15_000 });
+}
+
+/** Opens a couple dashboard the way the couple does: secret link, then the 6-digit code. */
+export async function openDashboard(page: import('@playwright/test').Page, slug: string, secret: string, pin = '123456') {
+  await page.goto(`/d/${slug}?k=${secret}`);
+  await page.getByLabel('رمز اللوحة').fill(pin);
+  await page.getByRole('button', { name: 'فتح اللوحة' }).click();
 }

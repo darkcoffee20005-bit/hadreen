@@ -86,6 +86,7 @@ export default async function EditWeddingPage({
       initial={initial}
       guestCount={w._count.guests}
       dashboardLink={dashboardUrl(siteUrl(), w.slug, w.coupleSecret)}
+      pin={w.couplePin}
       justCreated={justCreated}
     />
   );

@@ -48,6 +48,9 @@ export const limits = {
   rsvpByToken: (token: string) => limiter('rsvp-token', 6, 60).allow(token),
   events: (ip: string) => limiter('events', 60, 60).allow(ip),
   login: (ip: string) => limiter('login', 5, 600).allow(ip),
+  /** Dashboard codes: per browser IP and per wedding, so one wedding can't be hammered from many IPs. */
+  pinByIp: (ip: string) => limiter('pin-ip', 8, 600).allow(ip),
+  pinBySlug: (slug: string) => limiter('pin-slug', 20, 600).allow(slug),
 };
 
 export function clientIp(headers: Headers): string {

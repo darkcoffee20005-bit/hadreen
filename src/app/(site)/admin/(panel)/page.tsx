@@ -54,6 +54,7 @@ export default async function AdminHome() {
                 status={w.status}
                 inviteLink={inviteUrl(siteUrl(), w.slug)}
                 dashboardLink={dashboardUrl(siteUrl(), w.slug, w.coupleSecret)}
+                pin={w.couplePin}
               />
             </li>
           );

@@ -17,6 +17,7 @@ const prisma = new PrismaClient({
 });
 const token = customAlphabet(TOKEN_ALPHABET, TOKEN_LENGTH);
 const secret = customAlphabet(TOKEN_ALPHABET, SECRET_LENGTH);
+const pin = customAlphabet('0123456789', 6);
 
 const NIKKAH_VERSE =
   'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً';
@@ -187,6 +188,7 @@ async function main() {
         status: 'live',
         isDemo: true,
         coupleSecret: secret(),
+        couplePin: pin(),
       },
     });
 
@@ -203,7 +205,7 @@ async function main() {
         await prisma.rsvp.create({ data: { guestId: guest.id, attending, seats, message } });
       }
     }
-    lines.push(`  ${template.nameAr.padEnd(18)} /i/${wedding.slug}   dashboard: /d/${wedding.slug}?k=${wedding.coupleSecret}`);
+    lines.push(`  ${template.nameAr.padEnd(18)} /i/${wedding.slug}   dashboard: /d/${wedding.slug}?k=${wedding.coupleSecret}  code: ${wedding.couplePin}`);
   }
 
   console.log(`Seeded ${TEMPLATES.length} demo weddings:\n${lines.join('\n')}`);

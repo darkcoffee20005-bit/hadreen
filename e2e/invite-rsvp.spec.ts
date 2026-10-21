@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createWeddingWithGuest, openInvitation, prisma } from './fixtures';
+import { createWeddingWithGuest, openDashboard, openInvitation, prisma } from './fixtures';
 
 test.afterAll(async () => {
   await prisma.$disconnect();
@@ -28,7 +28,7 @@ test('a guest opens their invite, RSVPs, and the couple sees it', async ({ page 
   await openInvitation(page);
   await expect(page.locator('#rsvp').getByText('حاضرين (٢)')).toBeVisible();
 
-  await page.goto(`/d/${wedding.slug}?k=${wedding.coupleSecret}`);
+  await openDashboard(page, wedding.slug, wedding.coupleSecret);
   await expect(page).toHaveURL(new RegExp(`/d/${wedding.slug}$`)); // secret moved to a cookie
   const row = page.locator(`[data-guest="عائلة أبو حسين"]`);
   await expect(row.getByText('حاضرين')).toBeVisible();

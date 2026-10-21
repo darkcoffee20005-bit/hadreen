@@ -5,6 +5,7 @@ import { SECRET_LENGTH, TOKEN_ALPHABET, TOKEN_LENGTH } from '@/lib/validation/pa
 
 export const newGuestToken = customAlphabet(TOKEN_ALPHABET, TOKEN_LENGTH);
 export const newCoupleSecret = customAlphabet(TOKEN_ALPHABET, SECRET_LENGTH);
+export const newCouplePin = customAlphabet('0123456789', 6);
 
 /** Constant-time string comparison (hashing first makes the lengths equal). */
 export function safeEqual(a: string, b: string): boolean {

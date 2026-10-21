@@ -10,11 +10,13 @@ export function WeddingRowActions({
   status,
   inviteLink,
   dashboardLink,
+  pin,
 }: {
   id: string;
   status: 'draft' | 'live';
   inviteLink: string;
   dashboardLink: string;
+  pin: string;
 }) {
   const [pending, start] = useTransition();
   return (
@@ -28,6 +30,9 @@ export function WeddingRowActions({
       <a href={dashboardLink} target="_blank" rel="noopener noreferrer" className={ui.ghost}>
         لوحة العروسين
       </a>
+      <span className="inline-flex items-center px-3 py-1.5 text-sm text-ink-soft">
+        الرمز: <bdi dir="ltr" className="ms-1 font-medium tracking-widest text-ink">{pin || '—'}</bdi>
+      </span>
       <button
         type="button"
         className={ui.ghost}
