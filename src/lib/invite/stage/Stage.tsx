@@ -8,6 +8,7 @@ import { publishProbe } from '../capture';
 import { inviteStore, useInvite } from '../machine';
 import { TIER_SETTINGS } from '../quality/tiers';
 import { isBlackFrame, samplePoints } from './black-frame';
+import { dlog } from '../debug-log';
 
 /**
  * The one WebGL canvas of an invitation. Rendering is driven by FrameDriver (frameloop "never"):
@@ -36,9 +37,12 @@ export function Stage({ children, className }: { children: React.ReactNode; clas
       camera={{ fov: 35, near: 0.05, far: 200, position: [0, 0, 6] }}
       onCreated={(state) => {
         const { gl } = state;
+        const ctx = gl.getContext();
+        dlog(`canvas created webgl2=${typeof WebGL2RenderingContext !== 'undefined' && ctx instanceof WebGL2RenderingContext} maxTex=${ctx.getParameter(ctx.MAX_TEXTURE_SIZE)} buffer=${ctx.drawingBufferWidth}x${ctx.drawingBufferHeight}`);
         if (process.env.NODE_ENV !== 'production') (window as unknown as { __three?: unknown }).__three = state;
         gl.domElement.addEventListener('webglcontextlost', (e) => {
           e.preventDefault();
+          dlog('webgl context lost');
           inviteStore.getState().fallBackTo2d('context-lost');
         });
       }}
@@ -66,6 +70,7 @@ function FrameDriver() {
     // frame is black the driver can't run post-processing: step down to low, which has none. Low
     // itself isn't checked: some scenes (Eternal Romance) are legitimately that dark there.
     let gateFrames = 0;
+    let frames = 0;
     let checkedTier: string | null = null;
     const pixel = new Uint8Array(4);
     const checkBlack = () => {
@@ -95,7 +100,9 @@ function FrameDriver() {
       if (fps && now - last < 1000 / fps - 2) return;
       last = now;
       gl.info.reset();
+      if (frames < 3) dlog(`frame ${frames} start`);
       advance(now / 1000); // R3F's clock runs in seconds
+      if (frames < 3) dlog(`frame ${frames++} done calls=${gl.info.render.calls}`);
       // Read back right after drawing, before the browser presents (and clears) the buffer.
       checkBlack();
     };

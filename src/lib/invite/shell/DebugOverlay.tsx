@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { diagnostics } from '../capability';
+import { dlog } from '../debug-log';
 import { inviteStore, MILESTONES, useInvite, type Milestone } from '../machine';
 
 /**
@@ -36,6 +37,16 @@ export default function DebugOverlay() {
   }, []);
 
   useEffect(() => {
+    dlog(`gpu ${diagnostics.renderer} tier ${diagnostics.gpuTier} mobile ${diagnostics.isMobile} dpr ${window.devicePixelRatio} ${window.innerWidth}x${window.innerHeight}`);
+  }, []);
+  useEffect(() => {
+    dlog(`path ${path} tier ${tier} reason ${reason ?? '-'}`);
+  }, [path, tier, reason]);
+  useEffect(() => {
+    dlog(`progress ${(Object.keys(MILESTONES) as Milestone[]).map((k) => `${k}=${Math.round(progress[k] * 100)}`).join(' ')}`);
+  }, [progress]);
+  useEffect(() => {
+    dlog(`phase ${phase}`);
     setPhaseTimes((t) => [...t, `${phase} ${((performance.now() - since) / 1000).toFixed(1)}s`]);
   }, [phase, since]);
 

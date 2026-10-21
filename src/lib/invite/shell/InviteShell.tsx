@@ -10,6 +10,7 @@ import { SCENE_LOADERS } from '@/templates/scenes';
 import { audio } from '../audio/engine';
 import { track } from '../beacon';
 import { detectCapability, saveOptIn3d } from '../capability';
+import { dlog, enableDebugLog } from '../debug-log';
 import { publishProbe, readCapture } from '../capture';
 import { Backdrop2D } from '../fallback/Backdrop2D';
 import { Gate2D, GATE_2D_OPENING_MS } from '../fallback/Gate2D';
@@ -59,7 +60,9 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
   // 1. Decide the path once, on the client.
   useEffect(() => {
     setHydrated(true);
-    setDebug(new URLSearchParams(window.location.search).get('debug') === '1');
+    const debugOn = new URLSearchParams(window.location.search).get('debug') === '1';
+    setDebug(debugOn);
+    if (debugOn) enableDebugLog();
     const store = inviteStore.getState();
     store.reset();
     store.setCapture(readCapture(window.location.search));
@@ -82,6 +85,7 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
     // The scene chunk and the stage (three.js) download in parallel.
     Promise.all([SCENE_LOADERS[template.id](), import('../stage/Stage')])
       .then(([mod]) => {
+        dlog('chunks loaded');
         if (cancelled) return;
         setScene(() => mod.default);
         store.setProgress('chunk', 1);

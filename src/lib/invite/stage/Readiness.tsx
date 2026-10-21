@@ -2,6 +2,7 @@
 
 import { useThree } from '@react-three/fiber';
 import { useCallback, useEffect, useRef } from 'react';
+import { dlog } from '../debug-log';
 import { useInviteStore } from '../machine';
 
 /**
@@ -13,7 +14,10 @@ import { useInviteStore } from '../machine';
  */
 export function AssetsReady() {
   const store = useInviteStore();
-  useEffect(() => store.getState().setProgress('assets', 1), [store]);
+  useEffect(() => {
+    dlog('assets ready');
+    store.getState().setProgress('assets', 1);
+  }, [store]);
   return null;
 }
 
@@ -26,9 +30,11 @@ export function ShaderWarmup() {
     let cancelled = false;
     // Let the scene mount its meshes first (two frames), then compile them all.
     const id = setTimeout(() => {
+      dlog('shader warmup start');
       gl.compileAsync(scene, camera)
         .catch(() => undefined)
         .finally(() => {
+          dlog('shader warmup done');
           if (!cancelled) store.getState().setProgress('shaders', 1);
         });
     }, 50);
