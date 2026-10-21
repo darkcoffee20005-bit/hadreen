@@ -101,8 +101,18 @@ export function saveOptIn3d() {
   }
 }
 
+/** What the last capability check saw, for the ?debug=1 overlay. */
+export const diagnostics: { renderer: string; gpuTier: number | null; isMobile: boolean; reducedMotion: boolean; ms: number } = {
+  renderer: '',
+  gpuTier: null,
+  isMobile: false,
+  reducedMotion: false,
+  ms: 0,
+};
+
 /** Runs on the client after hydration. detect-gpu benchmarks are self-hosted under /detect-gpu. */
 export async function detectCapability(search: string, optIn3d = readOptIn3d()): Promise<Capability> {
+  const started = performance.now();
   const overrides = readQueryOverrides(search);
   const reducedMotion = prefersReducedMotion();
   const { webgl, renderer } = probeWebGL();
@@ -127,6 +137,7 @@ export async function detectCapability(search: string, optIn3d = readOptIn3d()):
     }
   }
 
+  Object.assign(diagnostics, { renderer, gpuTier, isMobile, reducedMotion, ms: Math.round(performance.now() - started) });
   return decideCapability({
     ...overrides,
     reducedMotion,

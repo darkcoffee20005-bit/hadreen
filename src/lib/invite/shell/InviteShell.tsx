@@ -26,8 +26,12 @@ import { GateAction } from './GateAction';
 const Stage = dynamic(() => import('../stage/Stage').then((m) => m.Stage), { ssr: false });
 const LabPanel = dynamic(() => import('../lab/LabPanel'), { ssr: false });
 const LabPerf = dynamic(() => import('../lab/LabPerf'), { ssr: false });
+const DebugOverlay = dynamic(() => import('./DebugOverlay'), { ssr: false });
 
-const LOADING_TIMEOUT_MS = 15_000;
+// Fall back to 2D only when loading stalls (no progress for this long), never just because a slow
+// mobile network takes a while: guests on 4G should still get the 3D opening.
+const LOADING_STALL_MS = 20_000;
+const LOADING_MAX_MS = 60_000;
 const HANDOFF_MS = 800;
 
 /**
@@ -49,11 +53,13 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
   const [Scene, setScene] = useState<ComponentType<SceneProps> | null>(null);
   const [fallback, setFallback] = useState<FallbackModule | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [debug, setDebug] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // 1. Decide the path once, on the client.
   useEffect(() => {
     setHydrated(true);
+    setDebug(new URLSearchParams(window.location.search).get('debug') === '1');
     const store = inviteStore.getState();
     store.reset();
     store.setCapture(readCapture(window.location.search));
@@ -81,12 +87,23 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
         store.setProgress('chunk', 1);
       })
       .catch(() => store.fallBackTo2d('chunk-failed'));
-    const timeout = setTimeout(() => {
-      if (inviteStore.getState().phase === 'loading') inviteStore.getState().fallBackTo2d('timeout');
-    }, LOADING_TIMEOUT_MS);
+    const started = performance.now();
+    let lastProgress = -1;
+    let lastChange = started;
+    const watchdog = setInterval(() => {
+      const s = inviteStore.getState();
+      if (s.phase !== 'loading') return clearInterval(watchdog);
+      const now = performance.now();
+      const p = totalProgress(s.progress);
+      if (p > lastProgress) {
+        lastProgress = p;
+        lastChange = now;
+      }
+      if (now - lastChange > LOADING_STALL_MS || now - started > LOADING_MAX_MS) s.fallBackTo2d('timeout');
+    }, 1000);
     return () => {
       cancelled = true;
-      clearTimeout(timeout);
+      clearInterval(watchdog);
     };
   }, [path, template.id, view.wedding.musicTrack]);
 
@@ -235,6 +252,7 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
         </Stage>
       )}
       {path === '2d' && <Backdrop view={sceneView} />}
+      {debug && <DebugOverlay />}
 
       {/* The content waits, invisible, under the gate; it rises in during the hand-off. */}
       <div
