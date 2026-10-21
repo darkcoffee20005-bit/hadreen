@@ -85,6 +85,7 @@ function FrameDriver() {
       });
       checkedTier = s.tier;
       gateFrames = 0;
+      dlog(`black-frame check ${s.tier} luma ${luma.map(Math.round).sort((a, b) => a - b).join(',')}`);
       if (isBlackFrame(luma)) s.forceTier('low');
     };
     const loop = (now: number) => {
