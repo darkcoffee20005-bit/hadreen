@@ -58,6 +58,9 @@ function FrameDriver() {
     let readyFrames = 0;
     // Count every pass of a frame (scene + post), not just the composer's last quad.
     gl.info.autoReset = false;
+    // Touch screens: the page scrolls over the canvas, so while reading it stays at a low rate
+    // whatever the guest does (a full-rate scene under a scrolling page is what makes phones lag).
+    const touch = window.matchMedia('(pointer: coarse)').matches;
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (document.hidden) return;
@@ -66,8 +69,8 @@ function FrameDriver() {
       // Capture mode: once the moment is published, hold the frame still so a screenshot or a
       // video frame never reads a half-drawn buffer.
       if (capture && window.__hadreen?.ready && ++readyFrames > 3) return;
-      const idle = phase === 'content' && now - lastInteraction > 1500;
-      const fps = idle ? TIER_SETTINGS[tier].idleFps : 0;
+      const idle = phase === 'content' && (touch || now - lastInteraction > 1500);
+      const fps = idle ? (touch ? Math.min(20, TIER_SETTINGS[tier].idleFps) : TIER_SETTINGS[tier].idleFps) : 0;
       if (fps && now - last < 1000 / fps - 2) return;
       last = now;
       gl.info.reset();

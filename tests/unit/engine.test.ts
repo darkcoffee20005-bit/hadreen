@@ -20,10 +20,17 @@ const base: CapabilityInputs = {
 
 describe('capability decision', () => {
   it('maps detect-gpu tiers', () => {
-    expect(decideCapability(base)).toEqual({ path: '3d', tier: 'medium' });
-    expect(decideCapability({ ...base, gpuTier: 3 })).toEqual({ path: '3d', tier: 'high' });
-    expect(decideCapability({ ...base, gpuTier: 1 })).toEqual({ path: '3d', tier: 'low' });
+    const desktop = { ...base, isMobile: false };
+    expect(decideCapability(desktop)).toEqual({ path: '3d', tier: 'medium' });
+    expect(decideCapability({ ...desktop, gpuTier: 3 })).toEqual({ path: '3d', tier: 'high' });
+    expect(decideCapability({ ...desktop, gpuTier: 1 })).toEqual({ path: '3d', tier: 'low' });
     expect(decideCapability({ ...base, gpuTier: 0 })).toMatchObject({ path: '2d', reason: 'gpu-blocklisted' });
+  });
+
+  it('runs phones one tier below their GPU tier', () => {
+    expect(decideCapability({ ...base, isMobile: true, gpuTier: 3 })).toEqual({ path: '3d', tier: 'medium' });
+    expect(decideCapability({ ...base, isMobile: true, gpuTier: 2 })).toEqual({ path: '3d', tier: 'low' });
+    expect(decideCapability({ ...base, isMobile: true, gpuTier: 1 })).toEqual({ path: '3d', tier: 'low' });
   });
 
   it('falls back to 2D without WebGL, when forced, or with reduced motion', () => {

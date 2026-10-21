@@ -1,4 +1,4 @@
-import { isTier, tierFromGpu, type Tier } from './quality/tiers';
+import { isTier, stepTier, tierFromGpu, type Tier } from './quality/tiers';
 
 export type Reason2D =
   | 'forced'
@@ -45,7 +45,9 @@ export function decideCapability(i: CapabilityInputs): Capability {
   } else {
     const mapped = tierFromGpu(i.gpuTier);
     if (!mapped) return { path: '2d', tier: 'low', reason: 'gpu-blocklisted' };
-    tier = mapped;
+    // Phones run a step lower than detect-gpu suggests: their screens are dense, they heat up
+    // and throttle, and the page scrolls over the canvas.
+    tier = i.isMobile ? stepTier(mapped, -1) : mapped;
   }
   if (i.saveData) tier = 'low';
   return { path: '3d', tier };
