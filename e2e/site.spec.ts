@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { TEMPLATES } from '../src/templates';
 
 test.describe('marketing site', () => {
   test('hero, picker, gallery filters, price and FAQ', async ({ page }) => {
@@ -12,11 +13,11 @@ test.describe('marketing site', () => {
 
     // Gallery filters by style.
     const gallery = page.locator('#designs');
-    await expect(gallery.locator('li h3')).toHaveCount(6);
+    await expect(gallery.locator('li h3')).toHaveCount(TEMPLATES.length);
     await gallery.getByRole('button', { name: 'سفر' }).click();
     await expect(gallery.locator('li h3')).toHaveText(['حب بلا حدود']);
     await gallery.getByRole('button', { name: 'الكل' }).click();
-    await expect(gallery.locator('li h3')).toHaveCount(6);
+    await expect(gallery.locator('li h3')).toHaveCount(TEMPLATES.length);
 
     await expect(page.locator('#price')).toContainText('٤٩ ألف دينار');
     const faq = page.locator('#faq');

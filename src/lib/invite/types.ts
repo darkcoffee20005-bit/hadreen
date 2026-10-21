@@ -5,6 +5,7 @@ export const TEMPLATE_IDS = [
   'royal-gold',
   'eternal-romance',
   'destination-love',
+  'old-money',
 ] as const;
 
 export type TemplateId = (typeof TEMPLATE_IDS)[number];

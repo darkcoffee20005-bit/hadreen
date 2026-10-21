@@ -44,7 +44,7 @@ interface MiniTarget {
 }
 
 /**
- * The hero carousel: the six designs as floating cards in emerald-and-gold space. Each card is a
+ * The hero carousel: the designs as floating cards in emerald-and-gold space. Each card is a
  * live, low-tier render of its template (its own scene, store and camera, rendered into a texture
  * round-robin — the front card most often). On the low tier the cards show painted posters.
  */
@@ -79,7 +79,7 @@ function Carousel({ views, live, tier }: { views: SceneView[]; live: boolean; ti
   // Phones give the carousel its own band; desktops give it the left of a wide hero.
   const wide = size.width > size.height * 1.3;
   const active = useHero((s) => s.active);
-  // Mount thumbnails one at a time (front card first) so the page never stalls on six scenes.
+  // Mount thumbnails one at a time (front card first) so the page never stalls on all the scenes.
   const [mounted, setMounted] = useState(0);
   useEffect(() => {
     if (!live || mounted >= views.length) return;

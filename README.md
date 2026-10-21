@@ -1,6 +1,6 @@
 # Hadreen (حاضرين)
 
-Interactive 3D wedding invitations, Arabic-first. Six bespoke templates open like a short film on the guest's phone (with a light 2D version for phones that can't), every household gets a personal link, and the couple follows the answers from their own dashboard. Orders come through Instagram ([@7adre.n](https://www.instagram.com/7adre.n/)).
+Interactive 3D wedding invitations, Arabic-first. Seven bespoke templates open like a short film on the guest's phone (with a light 2D version for phones that can't), every household gets a personal link, and the couple follows the answers from their own dashboard. Orders come through Instagram ([@7adre.n](https://www.instagram.com/7adre.n/)).
 
 - Plan, decisions and phase log: [PLAN.md](PLAN.md). Original brief: [docs/BRIEF.md](docs/BRIEF.md).
 - Deploying (Vercel + Neon): [DEPLOY.md](DEPLOY.md). Third-party assets: [LICENSES.md](LICENSES.md).
@@ -15,7 +15,7 @@ Interactive 3D wedding invitations, Arabic-first. Six bespoke templates open lik
 | Admin | `/admin` | Create, edit, preview, publish weddings; bulk guest import. |
 | Lab (dev only) | `/lab`, `/lab/<template>` | Leva panel: tier, phase, opening scrubber, scene tweaks, r3f-perf. |
 
-The six templates: الحديقة المقدّسة `sacred-garden`, ورد وعود `blossom-oud`, دولتشي فيتا `dolce-vita`, الذهب الملكي `royal-gold`, الرومانسية الأبدية `eternal-romance`, حب بلا حدود `destination-love`.
+The seven templates: الحديقة المقدّسة `sacred-garden`, ورد وعود `blossom-oud`, دولتشي فيتا `dolce-vita`, الذهب الملكي `royal-gold`, الرومانسية الأبدية `eternal-romance`, حب بلا حدود `destination-love`, الأناقة الكلاسيكية `old-money`.
 
 ## Setup
 
@@ -26,7 +26,7 @@ pnpm install                 # also generates the Prisma client
 cp .env.example .env         # then set ADMIN_PASSWORD and SESSION_SECRET (32+ chars)
 pnpm db:up                   # throwaway local Postgres on :54329 (data in ./.pg)
 pnpm db:deploy               # apply migrations
-pnpm db:seed                 # six demo weddings (demo-<template>), prints dashboard links
+pnpm db:seed                 # one demo wedding per template (demo-<template>), prints dashboard links
 pnpm dev                     # http://localhost:3000
 ```
 

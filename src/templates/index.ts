@@ -3,6 +3,7 @@ import { blossomOud } from './blossom-oud/meta';
 import { destinationLove } from './destination-love/meta';
 import { dolceVita } from './dolce-vita/meta';
 import { eternalRomance } from './eternal-romance/meta';
+import { oldMoney } from './old-money/meta';
 import { royalGold } from './royal-gold/meta';
 import { sacredGarden } from './sacred-garden/meta';
 
@@ -14,6 +15,7 @@ export const TEMPLATES: readonly TemplateMeta[] = [
   royalGold,
   eternalRomance,
   destinationLove,
+  oldMoney,
 ];
 
 export function isTemplateId(value: string): value is TemplateId {
