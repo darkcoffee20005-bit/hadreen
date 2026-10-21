@@ -26,8 +26,10 @@ export interface TierSettings {
 export const TIER_SETTINGS: Record<Tier, TierSettings> = {
   high: {
     dpr: 2,
-    msaa: 4,
-    smaa: false,
+    // No MSAA: multisampled half-float targets render black on some drivers (Intel Iris Xe
+    // through ANGLE/D3D11) and cost more than SMAA everywhere.
+    msaa: 0,
+    smaa: true,
     post: true,
     bloom: 'full',
     shadows: true,

@@ -3,6 +3,7 @@ import { decideCapability, readQueryOverrides, type CapabilityInputs } from '@/l
 import { readCapture } from '@/lib/invite/capture';
 import { createInviteStore, totalProgress, type IntroController } from '@/lib/invite/machine';
 import { scaledCount, stepTier, tierFromGpu } from '@/lib/invite/quality/tiers';
+import { isBlackFrame, samplePoints } from '@/lib/invite/stage/black-frame';
 import { bakeGradeData, gradeColor, NEUTRAL_GRADE } from '@/lib/invite/stage/grade';
 import { evaluateTrack, fitDistance, framedPosition, lerpShot, type Shot } from '@/lib/invite/stage/rig';
 
@@ -281,5 +282,19 @@ describe('live thumbnails (mini stores)', () => {
     vi.advanceTimersByTime(5000);
     expect(calls.filter((c) => c === 'play')).toHaveLength(2);
     vi.useRealTimers();
+  });
+});
+
+describe('black-frame guard', () => {
+  it('samples a grid inside the buffer', () => {
+    const points = samplePoints(100, 50);
+    expect(points).toHaveLength(25);
+    expect(points.every(([x, y]) => x >= 0 && x < 100 && y >= 0 && y < 50)).toBe(true);
+  });
+
+  it('calls a frame black by its median, ignoring a few lit pixels', () => {
+    expect(isBlackFrame([0, 0, 1, 2, 200])).toBe(true);
+    expect(isBlackFrame([0, 30, 40, 50, 60])).toBe(false);
+    expect(isBlackFrame([])).toBe(false);
   });
 });

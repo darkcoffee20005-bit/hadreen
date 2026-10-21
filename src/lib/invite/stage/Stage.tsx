@@ -7,6 +7,7 @@ import { NeutralToneMapping, NoToneMapping } from 'three';
 import { publishProbe } from '../capture';
 import { inviteStore, useInvite } from '../machine';
 import { TIER_SETTINGS } from '../quality/tiers';
+import { isBlackFrame, samplePoints } from './black-frame';
 
 /**
  * The one WebGL canvas of an invitation. Rendering is driven by FrameDriver (frameloop "never"):
@@ -61,6 +62,26 @@ function FrameDriver() {
     // Touch screens: the page scrolls over the canvas, so while reading it stays at a low rate
     // whatever the guest does (a full-rate scene under a scrolling page is what makes phones lag).
     const touch = window.matchMedia('(pointer: coarse)').matches;
+    // Black-frame guard: once the gate has drawn for a moment, read a few pixels back. If the
+    // frame is black the driver can't run post-processing: step down to low, which has none. Low
+    // itself isn't checked: some scenes (Eternal Romance) are legitimately that dark there.
+    let gateFrames = 0;
+    let checkedTier: string | null = null;
+    const pixel = new Uint8Array(4);
+    const checkBlack = () => {
+      const s = inviteStore.getState();
+      if (s.phase !== 'gate' || s.capture || s.tier === 'low' || checkedTier === s.tier) return;
+      if (++gateFrames < 20) return;
+      const ctx = gl.getContext();
+      const { drawingBufferWidth: w, drawingBufferHeight: h } = ctx;
+      const luma = samplePoints(w, h).map(([x, y]) => {
+        ctx.readPixels(x, y, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, pixel);
+        return 0.2126 * pixel[0]! + 0.7152 * pixel[1]! + 0.0722 * pixel[2]!;
+      });
+      checkedTier = s.tier;
+      gateFrames = 0;
+      if (isBlackFrame(luma)) s.forceTier('low');
+    };
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (document.hidden) return;
@@ -75,6 +96,8 @@ function FrameDriver() {
       last = now;
       gl.info.reset();
       advance(now / 1000); // R3F's clock runs in seconds
+      // Read back right after drawing, before the browser presents (and clears) the buffer.
+      checkBlack();
     };
     raf = requestAnimationFrame(loop);
     publishProbe({
