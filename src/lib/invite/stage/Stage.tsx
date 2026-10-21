@@ -79,14 +79,20 @@ function FrameDriver() {
       if (++gateFrames < 20) return;
       const ctx = gl.getContext();
       const { drawingBufferWidth: w, drawingBufferHeight: h } = ctx;
+      // Read the screen, not whatever target the composer left bound.
+      gl.setRenderTarget(null);
+      let unreadable = false;
       const luma = samplePoints(w, h).map(([x, y]) => {
         ctx.readPixels(x, y, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, pixel);
+        // The canvas is opaque, so a drawn pixel always reads alpha 255. Alpha 0 means the
+        // browser handed back nothing (iOS Safari does this): no verdict then.
+        if (pixel[3] === 0) unreadable = true;
         return 0.2126 * pixel[0]! + 0.7152 * pixel[1]! + 0.0722 * pixel[2]!;
       });
       checkedTier = s.tier;
       gateFrames = 0;
-      dlog(`black-frame check ${s.tier} luma ${luma.map(Math.round).sort((a, b) => a - b).join(',')}`);
-      if (isBlackFrame(luma)) s.forceTier('low');
+      dlog(`black-frame check ${s.tier}${unreadable ? ' unreadable' : ''} luma ${luma.map(Math.round).sort((a, b) => a - b).join(',')}`);
+      if (!unreadable && isBlackFrame(luma)) s.forceTier('low');
     };
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
