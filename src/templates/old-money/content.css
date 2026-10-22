@@ -1,0 +1,199 @@
+/*
+ * Content-page styling for old-money, scoped under [data-template='old-money'] (the content root
+ * carries the attribute), so it never reaches another template.
+ *
+ * Over the stage (3D or 2D) the page is the card itself: ivory cotton paper with ink-dark type,
+ * gold display headings and olive accents; sections run on as one sheet instead of floating
+ * cards. The countdown keeps its olive band. Programme items carry small line icons (picked from
+ * their titles by Extras.tsx), drawn here as masks so they take the palette's gold ink.
+ */
+[data-template='old-money'] {
+  --om-i-welcome: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M9%2028V15a7%207%200%200%201%2014%200v13%27%2F%3E%3Cpath%20d%3D%27M5%2028h22%27%2F%3E%3Cpath%20d%3D%27M13%2028V17a3%203%200%200%201%206%200v11%27%2F%3E%3Cpath%20d%3D%27M16%204v3%27%2F%3E%3Cpath%20d%3D%27M12%205.5l1%202.2M20%205.5l-1%202.2%27%2F%3E%3C%2Fsvg%3E");
+  --om-i-rings: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Ccircle%20cx%3D%2712.5%27%20cy%3D%2719.5%27%20r%3D%276.5%27%2F%3E%3Ccircle%20cx%3D%2719.5%27%20cy%3D%2719.5%27%20r%3D%276.5%27%2F%3E%3Cpath%20d%3D%27M10%209.5l2.5-3.5h2l2.5%203.5-3.5%203z%27%2F%3E%3C%2Fsvg%3E");
+  --om-i-music: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M12%2024V8l12-3v15.5%27%2F%3E%3Ccircle%20cx%3D%279.5%27%20cy%3D%2724%27%20r%3D%272.6%27%2F%3E%3Ccircle%20cx%3D%2721.5%27%20cy%3D%2720.5%27%20r%3D%272.6%27%2F%3E%3Cpath%20d%3D%27M12%2012l12-3%27%2F%3E%3C%2Fsvg%3E");
+  --om-i-dinner: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2717%27%20r%3D%277.5%27%2F%3E%3Ccircle%20cx%3D%2716%27%20cy%3D%2717%27%20r%3D%274.6%27%2F%3E%3Cpath%20d%3D%27M4.5%207v6a2%202%200%200%200%202%202v12M6.5%207v6M8.5%207v6%27%2F%3E%3Cpath%20d%3D%27M27.5%207c-2.2%201-2.8%204.5-2.8%208h2.8v12%27%2F%3E%3C%2Fsvg%3E");
+  --om-i-cake: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M6%2027h20%27%2F%3E%3Cpath%20d%3D%27M8%2027v-8h16v8%27%2F%3E%3Cpath%20d%3D%27M11%2019v-4.5h10V19%27%2F%3E%3Cpath%20d%3D%27M16%2014.5v-3%27%2F%3E%3Cpath%20d%3D%27M16%207.5c1.2%201.2%201.2%202.5%200%203.5-1.2-1-1.2-2.3%200-3.5z%27%2F%3E%3Cpath%20d%3D%27M8%2023c2.7%201.6%205.3%201.6%208%200s5.3-1.6%208%200%27%2F%3E%3C%2Fsvg%3E");
+  --om-i-toast: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M8%205h6.5l-.6%207.5a2.7%202.7%200%200%201-5.3%200z%27%2F%3E%3Cpath%20d%3D%27M11.2%2015.2V25M8.2%2025h6%27%2F%3E%3Cpath%20d%3D%27M17.5%205H24l-.6%207.5a2.7%202.7%200%200%201-5.3%200z%27%2F%3E%3Cpath%20d%3D%27M20.8%2015.2V25M17.8%2025h6%27%2F%3E%3Cpath%20d%3D%27M15.5%203l1-1.6M13%202.6l.6.9M18.8%202.6l-.6.9%27%2F%3E%3C%2Fsvg%3E");
+  --om-i-heart: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%20fill%3D%27none%27%20stroke%3D%27black%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M16%2026s-9.5-5.6-9.5-12.2A5.2%205.2%200%200%201%2016%2011a5.2%205.2%200%200%201%209.5%202.8C25.5%2020.4%2016%2026%2016%2026z%27%2F%3E%3C%2Fsvg%3E");
+}
+
+/* ─── Hero: on the card, ink and gold instead of light text over a dark pool ─── */
+[data-path] [data-template='old-money'] > header > div[aria-hidden='true'] {
+  background: radial-gradient(60% 40% at 50% 50%, rgb(255 253 246 / 0.55), transparent);
+}
+[data-path] [data-template='old-money'] > header p {
+  color: var(--c-ink-soft);
+}
+[data-path] [data-template='old-money'] > header > p:first-child {
+  color: var(--c-gold-ink);
+  letter-spacing: 0.02em;
+}
+[data-path] [data-template='old-money'] #invite-hero {
+  color: var(--c-gold-ink);
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.7), 0 6px 22px rgb(111 88 42 / 0.12);
+}
+[data-path] [data-template='old-money'] #invite-hero > span:nth-child(2) {
+  color: var(--c-ink-soft);
+}
+[data-path] [data-template='old-money'] > header a[href='#details'] {
+  border-color: color-mix(in srgb, var(--c-gold) 70%, transparent);
+  color: var(--c-ink);
+  background: color-mix(in srgb, var(--c-surface) 55%, transparent);
+}
+[data-path] [data-template='old-money'] > header a[href='#details']:hover {
+  background: color-mix(in srgb, var(--c-accent) 10%, transparent);
+}
+
+/* ─── Sections: one continuous sheet of the card, not floating panels ─── */
+[data-path] [data-template='old-money'] main > section[data-reveal]:not([aria-labelledby='countdown-title']) > div {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+[data-template='old-money'] main h2,
+[data-template='old-money'] .om-details h2 {
+  font-family: var(--f-display);
+  font-size: 2.35rem;
+  line-height: 1.4;
+  color: var(--c-gold-ink);
+}
+/* A hairline between sections, with a small heart where it parts. */
+[data-path] [data-template='old-money'] main > section[data-reveal] {
+  position: relative;
+}
+[data-path] [data-template='old-money'] main > section[data-reveal]::before {
+  content: '';
+  display: block;
+  width: min(14rem, 60%);
+  height: 0.9rem;
+  margin: 0.5rem auto 0;
+  background:
+    linear-gradient(var(--c-gold), var(--c-gold)) left center / calc(50% - 1rem) 1px no-repeat,
+    linear-gradient(var(--c-gold), var(--c-gold)) right center / calc(50% - 1rem) 1px no-repeat;
+  -webkit-mask: none;
+}
+[data-path] [data-template='old-money'] main > section[data-reveal]::after {
+  content: '';
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  width: 0.9rem;
+  height: 0.9rem;
+  translate: -50% 0;
+  background: var(--c-gold);
+  -webkit-mask: var(--om-i-heart) center / contain no-repeat;
+  mask: var(--om-i-heart) center / contain no-repeat;
+}
+[data-path] [data-template='old-money'] main > section:last-of-type::before,
+[data-path] [data-template='old-money'] main > section:last-of-type::after {
+  content: none;
+}
+
+/* ─── Countdown: the olive band from the design, softly painted ─── */
+[data-template='old-money'] section[aria-labelledby='countdown-title'] > div {
+  background:
+    radial-gradient(120% 90% at 20% 0%, color-mix(in srgb, var(--c-band) 70%, #c9cba6) 0%, transparent 55%),
+    radial-gradient(90% 80% at 90% 100%, color-mix(in srgb, var(--c-band) 75%, #000) 0%, transparent 60%),
+    var(--c-band);
+  border-color: color-mix(in srgb, var(--c-gold) 50%, transparent);
+  border-radius: 1.25rem;
+}
+[data-template='old-money'] section[aria-labelledby='countdown-title'] h2 {
+  font-family: var(--f-display);
+  font-size: 1.9rem;
+  color: var(--c-on-band);
+}
+[data-template='old-money'] .flip-half {
+  background: color-mix(in srgb, var(--c-surface) 94%, var(--c-gold));
+}
+[data-template='old-money'] .flip-bottom {
+  background: var(--c-surface);
+}
+
+/* ─── Programme: a line icon in a ring at each moment ─── */
+[data-template='old-money'] #programme ol > li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -3.35rem;
+  top: -0.3rem;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  background: var(--c-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-gold) 70%, transparent);
+}
+[data-template='old-money'] #programme ol > li > span[aria-hidden='true'] {
+  inset-inline-start: -3.05rem;
+  top: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  rotate: none;
+  transform: none;
+  border: 0;
+  z-index: 1;
+  background: var(--c-gold-ink);
+  -webkit-mask: var(--om-i-heart) center / contain no-repeat;
+  mask: var(--om-i-heart) center / contain no-repeat;
+}
+[data-template='old-money'] #programme ol > li[data-icon='welcome'] > span[aria-hidden='true'] {
+  -webkit-mask-image: var(--om-i-welcome);
+  mask-image: var(--om-i-welcome);
+}
+[data-template='old-money'] #programme ol > li[data-icon='rings'] > span[aria-hidden='true'] {
+  -webkit-mask-image: var(--om-i-rings);
+  mask-image: var(--om-i-rings);
+}
+[data-template='old-money'] #programme ol > li[data-icon='music'] > span[aria-hidden='true'] {
+  -webkit-mask-image: var(--om-i-music);
+  mask-image: var(--om-i-music);
+}
+[data-template='old-money'] #programme ol > li[data-icon='dinner'] > span[aria-hidden='true'] {
+  -webkit-mask-image: var(--om-i-dinner);
+  mask-image: var(--om-i-dinner);
+}
+[data-template='old-money'] #programme ol > li[data-icon='cake'] > span[aria-hidden='true'] {
+  -webkit-mask-image: var(--om-i-cake);
+  mask-image: var(--om-i-cake);
+}
+[data-template='old-money'] #programme ol > li[data-icon='toast'] > span[aria-hidden='true'] {
+  -webkit-mask-image: var(--om-i-toast);
+  mask-image: var(--om-i-toast);
+}
+[data-template='old-money'] #programme ol {
+  padding-inline-start: 3.25rem;
+}
+[data-template='old-money'] #programme ol > li {
+  min-height: 2.3rem;
+}
+[data-template='old-money'] #programme ol > li > p:first-of-type {
+  letter-spacing: 0.04em;
+}
+
+/* ─── Cards (venue, RSVP, dress): white paper with a fine double gold rule ─── */
+[data-template='old-money'] main .gold-frame,
+[data-template='old-money'] #dress dl > div {
+  background: color-mix(in srgb, var(--c-surface) 92%, transparent);
+  border-color: color-mix(in srgb, var(--c-gold) 45%, transparent);
+  box-shadow:
+    inset 0 0 0 5px color-mix(in srgb, var(--c-surface) 92%, transparent),
+    inset 0 0 0 6px color-mix(in srgb, var(--c-gold) 40%, transparent),
+    0 18px 40px -30px rgb(60 50 20 / 0.35);
+}
+/* The details card shows the dress colours as hearts; no second row of dots. */
+[data-template='old-money'] #dress ul[aria-hidden='true'] {
+  display: none;
+}
+
+/* ─── Closing line and footer on the paper ─── */
+[data-path] [data-template='old-money'] main > section:last-of-type p {
+  color: var(--c-gold-ink);
+  text-shadow: none;
+}
+[data-path] [data-template='old-money'] > footer {
+  color: var(--c-ink-soft);
+}
+[data-path] [data-template='old-money'] > footer a {
+  color: var(--c-gold-ink);
+}

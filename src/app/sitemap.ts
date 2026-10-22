@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { siteUrl } from '@/lib/env';
 import { TEMPLATES } from '@/templates';
 
-/** The site and the six demo invitations (personal invitations are never listed). */
+/** The site and the demo invitations, one per design (personal invitations are never listed). */
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
   return [

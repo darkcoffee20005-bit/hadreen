@@ -15,4 +15,5 @@ export const SCENE_LOADERS: Record<TemplateId, () => Promise<SceneModule>> = {
   'royal-gold': () => import('./royal-gold/Scene'),
   'eternal-romance': () => import('./eternal-romance/Scene'),
   'destination-love': () => import('./destination-love/Scene'),
+  'old-money': () => import('./old-money/Scene'),
 };

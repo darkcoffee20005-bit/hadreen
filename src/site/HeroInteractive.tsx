@@ -36,7 +36,7 @@ export function HeroInteractive({ views, children }: { views: SceneView[]; child
     let cancelled = false;
     const run = () =>
       detectCapability(window.location.search).then((cap) => {
-        // Six live scenes at once are a desktop luxury: phones and tablets keep the posters
+        // Seven live scenes at once are a desktop luxury: phones and tablets keep the posters
         // (each design still opens in full 3D on its own page).
         const desktop = window.matchMedia('(min-width: 1024px) and (pointer: fine)').matches;
         if (cancelled || cap.path !== '3d' || !desktop || cap.tier === 'low') return;

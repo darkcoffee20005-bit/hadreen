@@ -124,6 +124,23 @@ const DEMOS: Record<TemplateId, Demo> = {
     notes: '',
     originCity: 'istanbul',
   },
+  'old-money': {
+    groom: 'علي',
+    bride: 'هدى',
+    venue: 'قاعة الزيتون (مثال)',
+    area: 'بغداد',
+    verse: NIKKAH_VERSE,
+    intro: 'بكل الحب، نتشرّف بدعوتكم لمشاركتنا عقد قراننا وحفل زفافنا، ونتمنى نشوفكم بيننا.',
+    schedule: [
+      { time: '18:30', title: 'استقبال الضيوف', subtitle: 'ضيافة وموسيقى هادئة' },
+      { time: '19:30', title: 'عقد القران', subtitle: 'بحضور الأهل والأحبة' },
+      { time: '20:30', title: 'الزفّة', subtitle: '' },
+      { time: '21:30', title: 'العشاء', subtitle: '' },
+      { time: '22:30', title: 'قطع الكيك', subtitle: '' },
+    ],
+    dress: { label: 'رسمي أنيق', swatches: ['#6E7B55', '#E9E3D3', '#2E3325', '#B89A5E', '#9A9A96'], ladies: 'فساتين سهرة بألوان هادئة', gentlemen: 'بدلة رسمية داكنة' },
+    notes: 'نرجو تأكيد الحضور قبل الموعد المحدد حتى نرتب لكم أماكنكم.',
+  },
 };
 
 const GUESTS = [
