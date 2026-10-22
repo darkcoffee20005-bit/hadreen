@@ -5,6 +5,7 @@ export const TEMPLATE_IDS = [
   'royal-gold',
   'eternal-romance',
   'destination-love',
+  'white-house-hall',
 ] as const;
 
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
@@ -77,6 +78,11 @@ export interface TemplateMeta {
   og: 'light' | 'dark';
   budgetKB: number;
   styleTags: StyleTag[];
+  /**
+   * The venue a design was made for (e.g. 'قاعة البيت الأبيض'). Exclusive designs are offered
+   * through that venue only: selectable in the admin, never shown on the public site.
+   */
+  exclusive?: string;
 }
 
 export type StyleTag = 'classic' | 'romantic' | 'nature' | 'royal' | 'travel' | 'modern' | 'oriental';

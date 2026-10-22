@@ -171,6 +171,7 @@ export function WeddingEditor({
                   ))}
                 </span>
                 <span className="mt-2 block font-medium text-ink">{t.nameAr}</span>
+                {t.exclusive && <span className="mt-0.5 block text-xs text-ink-soft">حصري لـ{t.exclusive}</span>}
               </button>
             ))}
           </div>

@@ -17,6 +17,8 @@ Interactive 3D wedding invitations, Arabic-first. Six bespoke templates open lik
 
 The six templates: الحديقة المقدّسة `sacred-garden`, ورد وعود `blossom-oud`, دولتشي فيتا `dolce-vita`, الذهب الملكي `royal-gold`, الرومانسية الأبدية `eternal-romance`, حب بلا حدود `destination-love`.
 
+Venue-exclusive designs carry `exclusive` (the venue's name) in their meta: they're selectable in `/admin` but never appear on the public site (`PUBLIC_TEMPLATES`). Today: البيت الأبيض `white-house-hall`, made for قاعة البيت الأبيض (Mosul).
+
 ## Setup
 
 Requirements: Node 22.13+, pnpm 10, PostgreSQL 16 (local binaries, or any Postgres URL), ffmpeg (only for recording previews).
@@ -88,7 +90,7 @@ DATABASE_URL=$E2E_DATABASE_URL SITE_URL=http://localhost:3100 NEXT_DIST_DIR=.nex
 ## Adding a template
 
 1. `src/lib/invite/types.ts`: add the id to `TEMPLATE_IDS`.
-2. `src/templates/<id>/meta.ts`: names, tagline, palette (DOM tokens must pass AA, see `tests/unit/palette.test.ts`), music mood and placeholder, intro length, gate gesture and label, style tags, budget. Register it in `src/templates/index.ts`.
+2. `src/templates/<id>/meta.ts`: names, tagline, palette (DOM tokens must pass AA, see `tests/unit/palette.test.ts`), music mood and placeholder, intro length, gate gesture and label, style tags, budget, and `exclusive` if it belongs to one venue. Register it in `src/templates/index.ts`.
 3. `src/templates/<id>/Scene.tsx`: default export taking `SceneProps`. Follow the template contract (PLAN.md §4.4) and the finished templates (`royal-gold/` is a good model):
    - build the opening with `useIntro`; drive visuals from the opening's time so skip/seek land exactly;
    - read the store with `useInviteStore()` / `useInvite()`, never the `inviteStore` singleton;

@@ -33,6 +33,7 @@ interface Demo {
   dress: { label: string; swatches: string[]; ladies: string; gentlemen: string };
   notes: string;
   originCity?: string;
+  mapsUrl?: string;
 }
 
 const DEMOS: Record<TemplateId, Demo> = {
@@ -124,6 +125,23 @@ const DEMOS: Record<TemplateId, Demo> = {
     notes: '',
     originCity: 'istanbul',
   },
+  'white-house-hall': {
+    groom: 'عمر',
+    bride: 'رهف',
+    venue: 'قاعة البيت الأبيض',
+    area: 'الموصل · الغابات',
+    verse: NIKKAH_VERSE,
+    intro: 'بقلوب ملؤها الفرح، نتشرّف بدعوتكم لمشاركتنا ليلة العمر في قاعة البيت الأبيض.',
+    schedule: [
+      { time: '19:00', title: 'استقبال الضيوف', subtitle: '' },
+      { time: '20:00', title: 'دخول العروسين', subtitle: '' },
+      { time: '21:00', title: 'العشاء', subtitle: '' },
+      { time: '22:30', title: 'قطع الكيك', subtitle: '' },
+    ],
+    dress: { label: 'أبيض وأسود', swatches: ['#F4F1EA', '#151515', '#B5A27A'], ladies: 'فساتين سهرة بالأسود أو بألوان هادئة', gentlemen: 'بدلة سوداء' },
+    notes: 'نتشرّف بحضوركم من بداية الحفل.',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=%D9%82%D8%A7%D8%B9%D8%A9%20%D8%A7%D9%84%D8%A8%D9%8A%D8%AA%20%D8%A7%D9%84%D8%A3%D8%A8%D9%8A%D8%B6%20%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84',
+  },
 };
 
 const GUESTS = [
@@ -178,6 +196,7 @@ async function main() {
         intro: demo.intro,
         venueName: demo.venue,
         venueArea: demo.area,
+        mapsUrl: demo.mapsUrl ?? '',
         dressCode: demo.dress as Prisma.InputJsonValue,
         notes: demo.notes,
         rsvpDeadline: deadline,

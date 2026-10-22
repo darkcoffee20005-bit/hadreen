@@ -1,12 +1,12 @@
 {
-  "measuredAt": "2026-10-21T02:49:23.656Z",
-  "base": "http://localhost:3100",
+  "measuredAt": "2026-10-22T23:01:44.986Z",
+  "base": "http://localhost:3300",
   "rows": [
     {
       "template": "sacred-garden",
       "budgetKB": 1200,
-      "kb3d": 994,
-      "kb2d": 523,
+      "kb3d": 995,
+      "kb2d": 524,
       "requests3d": 48,
       "gate": {
         "calls": 52,
@@ -16,18 +16,18 @@
         "programs": 51
       },
       "content": {
-        "calls": 61,
-        "triangles": 107743,
-        "geometries": 45,
-        "textures": 32,
-        "programs": 53
+        "calls": 42,
+        "triangles": 107515,
+        "geometries": 38,
+        "textures": 26,
+        "programs": 43
       }
     },
     {
       "template": "blossom-oud",
       "budgetKB": 1400,
-      "kb3d": 991,
-      "kb2d": 521,
+      "kb3d": 992,
+      "kb2d": 522,
       "requests3d": 42,
       "gate": {
         "calls": 24,
@@ -47,9 +47,9 @@
     {
       "template": "dolce-vita",
       "budgetKB": 1300,
-      "kb3d": 985,
-      "kb2d": 522,
-      "requests3d": 40,
+      "kb3d": 987,
+      "kb2d": 523,
+      "requests3d": 41,
       "gate": {
         "calls": 67,
         "triangles": 283263,
@@ -62,14 +62,14 @@
         "triangles": 284543,
         "geometries": 53,
         "textures": 36,
-        "programs": 53
+        "programs": 52
       }
     },
     {
       "template": "royal-gold",
       "budgetKB": 1400,
-      "kb3d": 990,
-      "kb2d": 522,
+      "kb3d": 991,
+      "kb2d": 524,
       "requests3d": 42,
       "gate": {
         "calls": 61,
@@ -89,8 +89,8 @@
     {
       "template": "eternal-romance",
       "budgetKB": 1300,
-      "kb3d": 985,
-      "kb2d": 521,
+      "kb3d": 986,
+      "kb2d": 522,
       "requests3d": 45,
       "gate": {
         "calls": 46,
@@ -110,9 +110,9 @@
     {
       "template": "destination-love",
       "budgetKB": 1300,
-      "kb3d": 1014,
-      "kb2d": 521,
-      "requests3d": 43,
+      "kb3d": 1016,
+      "kb2d": 522,
+      "requests3d": 44,
       "gate": {
         "calls": 30,
         "triangles": 26899,
@@ -126,6 +126,27 @@
         "geometries": 32,
         "textures": 28,
         "programs": 36
+      }
+    },
+    {
+      "template": "white-house-hall",
+      "budgetKB": 1300,
+      "kb3d": 993,
+      "kb2d": 524,
+      "requests3d": 44,
+      "gate": {
+        "calls": 22,
+        "triangles": 1312,
+        "geometries": 26,
+        "textures": 29,
+        "programs": 37
+      },
+      "content": {
+        "calls": 40,
+        "triangles": 57374,
+        "geometries": 46,
+        "textures": 37,
+        "programs": 46
       }
     }
   ]

@@ -17,6 +17,8 @@ test.describe('marketing site', () => {
     await expect(gallery.locator('li h3')).toHaveText(['حب بلا حدود']);
     await gallery.getByRole('button', { name: 'الكل' }).click();
     await expect(gallery.locator('li h3')).toHaveCount(6);
+    // Venue-exclusive designs are offered through their venue, never on the public site.
+    await expect(page.getByText('البيت الأبيض', { exact: true })).toHaveCount(0);
 
     await expect(page.locator('#price')).toContainText('٤٩ ألف دينار');
     const faq = page.locator('#faq');
@@ -39,6 +41,7 @@ test.describe('marketing site', () => {
     expect(robots).toContain('Disallow: /d/');
     const sitemap = await (await request.get('/sitemap.xml')).text();
     expect(sitemap).toContain('/i/demo-royal-gold');
+    expect(sitemap).not.toContain('/i/demo-white-house-hall');
     expect(sitemap).not.toContain('/d/');
   });
 });

@@ -3,15 +3,15 @@
 import { useMemo, useState } from 'react';
 import { INSTAGRAM_URL } from '@/lib/links';
 import type { StyleTag } from '@/lib/invite/types';
-import { TEMPLATES } from '@/templates';
+import { PUBLIC_TEMPLATES } from '@/templates';
 import { copy } from './copy';
 import { PreviewMedia } from './PreviewMedia';
 import { SectionTitle } from './ui';
 
 export function Gallery() {
   const [filter, setFilter] = useState<StyleTag | 'all'>('all');
-  const tags = useMemo(() => [...new Set(TEMPLATES.flatMap((t) => t.styleTags))], []);
-  const shown = TEMPLATES.filter((t) => filter === 'all' || t.styleTags.includes(filter));
+  const tags = useMemo(() => [...new Set(PUBLIC_TEMPLATES.flatMap((t) => t.styleTags))], []);
+  const shown = PUBLIC_TEMPLATES.filter((t) => filter === 'all' || t.styleTags.includes(filter));
 
   return (
     <section id="designs" aria-labelledby="designs-title" className="bg-ivory px-5 py-24">

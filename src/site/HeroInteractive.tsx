@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { detectCapability } from '@/lib/invite/capability';
 import type { Tier } from '@/lib/invite/quality/tiers';
 import type { SceneView } from '@/lib/invite/scene-types';
-import { TEMPLATES } from '@/templates';
+import { PUBLIC_TEMPLATES } from '@/templates';
 import { copy } from './copy';
 import { heroStore, useHero } from './hero-store';
 import { PosterFan } from './PosterFan';
@@ -28,11 +28,11 @@ export function HeroInteractive({ views, children }: { views: SceneView[]; child
   const [postersShown, setPostersShown] = useState(true);
   const [visible, setVisible] = useState(true);
   const section = useRef<HTMLDivElement>(null);
-  const template = TEMPLATES[active]!;
+  const template = PUBLIC_TEMPLATES[active]!;
 
   // Decide once the page is idle: the headline paints first, the 3D comes after.
   useEffect(() => {
-    heroStore.setState({ count: TEMPLATES.length });
+    heroStore.setState({ count: PUBLIC_TEMPLATES.length });
     let cancelled = false;
     const run = () =>
       detectCapability(window.location.search).then((cap) => {
@@ -93,7 +93,7 @@ export function HeroInteractive({ views, children }: { views: SceneView[]; child
             <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-ivory/75 lg:mx-0">{template.taglineAr}</p>
           </div>
           <ul className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start" aria-label={copy.hero.pick}>
-            {TEMPLATES.map((t, i) => (
+            {PUBLIC_TEMPLATES.map((t, i) => (
               <li key={t.id}>
                 <button
                   type="button"

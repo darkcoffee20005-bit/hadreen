@@ -25,7 +25,7 @@ import { createMiniStore, InviteStoreContext } from '@/lib/invite/machine';
 import { TIER_SETTINGS, type Tier } from '@/lib/invite/quality/tiers';
 import type { SceneProps, SceneView } from '@/lib/invite/scene-types';
 import type { TemplateMeta } from '@/lib/invite/types';
-import { TEMPLATES } from '@/templates';
+import { PUBLIC_TEMPLATES } from '@/templates';
 import { SCENE_LOADERS } from '@/templates/scenes';
 import { heroStore, useHero } from './hero-store';
 import { playSting } from './sting';
@@ -35,7 +35,7 @@ const W = 300;
 const H = 600;
 const CARD_W = 1.5;
 const CARD_H = 3;
-const STEP = (Math.PI * 2) / TEMPLATES.length;
+const STEP = (Math.PI * 2) / PUBLIC_TEMPLATES.length;
 
 interface MiniTarget {
   scene: Scene;
@@ -182,7 +182,7 @@ function Carousel({ views, live, tier }: { views: SceneView[]; live: boolean; ti
       <group position={[offsetX, 0, 0]} scale={scale}>
         <FrontGlow />
         <group ref={ring}>
-          {TEMPLATES.map((t, i) => {
+          {PUBLIC_TEMPLATES.map((t, i) => {
             const view = views.find((v) => v.templateId === t.id);
             const a = -i * STEP;
             return (
