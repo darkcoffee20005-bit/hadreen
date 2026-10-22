@@ -19,8 +19,8 @@ import {
   type Mesh,
 } from 'three';
 import { mixHex } from '@/lib/invite/stage/color';
-import { canvas, cssFontFamily, heightToNormal, monogramHeight, tintFromHeight } from '@/lib/invite/stage/textures';
-import { envelopeMaps } from '../art';
+import { canvas, cssFontFamily, heightToNormal, tintFromHeight } from '@/lib/invite/stage/textures';
+import { envelopeMaps, sealHeight } from '../art';
 import { grid } from '../geometry';
 import { FLAPS, SEAL_SEEDS, sealRim, shardMotion, type FlapId } from '../layout';
 
@@ -117,19 +117,24 @@ type Tex = NonNullable<MeshStandardMaterial['map']>;
  * Wax material that keeps only one Voronoi cell of the seal (its shard), with crack lines, a
  * sweeping glint and a warm inner glow that rises in its rim before it breaks.
  */
-function shardMaterial(index: number, maps: { map: Tex; normal: Tex }, color: string) {
-  const m = new MeshPhysicalMaterial({
-    color: '#ffffff',
-    map: maps.map,
-    normalMap: maps.normal,
-    normalScale: new Vector2(1.1, 1.1),
-    roughness: 0.38,
-    clearcoat: 0.85,
-    clearcoatRoughness: 0.2,
-    sheen: 0.35,
-    sheenColor: mixHex(color, '#ffffff', 0.35),
-    transparent: true,
-  });
+function shardMaterial(index: number, maps: { map: Tex; normal: Tex }, color: string, gold: boolean) {
+  const m = new MeshPhysicalMaterial(
+    gold
+      ? // Antique gilt: metal, a soft polish and a thin lacquer that catches a second highlight.
+        { color: '#ffffff', map: maps.map, normalMap: maps.normal, normalScale: new Vector2(1.5, 1.5), metalness: 1, roughness: 0.3, clearcoat: 0.35, clearcoatRoughness: 0.25, transparent: true }
+      : {
+          color: '#ffffff',
+          map: maps.map,
+          normalMap: maps.normal,
+          normalScale: new Vector2(1.1, 1.1),
+          roughness: 0.38,
+          clearcoat: 0.85,
+          clearcoatRoughness: 0.2,
+          sheen: 0.35,
+          sheenColor: mixHex(color, '#ffffff', 0.35),
+          transparent: true,
+        },
+  );
   const uniforms = {
     uShard: { value: index },
     uSeeds: { value: SEAL_SEEDS.map(([x, y]) => new Vector2(x, y)) },
@@ -170,10 +175,10 @@ function shardMaterial(index: number, maps: { map: Tex; normal: Tex }, color: st
         totalEmissiveRadiance += ember * crackLine * uGlow * 2.2;
         totalEmissiveRadiance += ember * uGlow * (0.06 + rim * 0.75);
         float band = exp(-pow((sp.x * 0.8 + sp.y * 0.6) - mix(-4.0, 4.0, uGlint), 2.0) * 14.0);
-        totalEmissiveRadiance += vec3(1.0, 0.86, 0.66) * band * 0.28;`,
+        totalEmissiveRadiance += vec3(1.0, 0.86, 0.66) * band * ${gold ? '0.45' : '0.28'};`,
       );
   };
-  m.customProgramCacheKey = () => 'sg-seal-shard-v2';
+  m.customProgramCacheKey = () => `sg-seal-shard-v3-${gold ? 'gold' : 'wax'}`;
   return { material: m, uniforms };
 }
 
@@ -228,12 +233,15 @@ export function GardenEnvelope({
   monogram,
   fontVar,
   state,
+  relief = 0.9,
 }: {
   size: { w: number; h: number };
-  colors: { paper: string; blush: string; gold: string; seal: string };
+  colors: { paper: string; blush: string; gold: string; seal: string; sealRelief: string; sealFinish: string };
   monogram: string;
   fontVar: string;
   state: React.RefObject<EnvelopeAnim>;
+  /** Strength of the blind emboss (normal scale). */
+  relief?: number;
 }) {
   const { w, h } = size;
   const R = Math.min(w, h) * 0.14;
@@ -255,14 +263,15 @@ export function GardenEnvelope({
   const mats = useMemo(() => {
     if (typeof document === 'undefined') return null;
     const face = envelopeMaps(w, h, { paper: colors.paper, blush: colors.blush });
-    const height = monogramHeight(monogram, cssFontFamily(fontVar, 'serif'));
-    const sealMaps = { map: tintFromHeight(height, colors.seal, mixHex(colors.gold, '#ffffff', 0.15)), normal: heightToNormal(height, 3) };
+    const gold = colors.sealFinish === 'gold';
+    const height = sealHeight(monogram, cssFontFamily(fontVar, 'serif'));
+    const sealMaps = { map: tintFromHeight(height, colors.seal, colors.sealRelief), normal: heightToNormal(height, gold ? 3.6 : 3) };
     const glow = glowTexture();
     return {
       front: new MeshPhysicalMaterial({
         map: face.map,
         normalMap: face.normalMap,
-        normalScale: new Vector2(0.9, 0.9),
+        normalScale: new Vector2(relief, relief),
         roughness: 0.82,
         sheen: 0.5,
         sheenColor: '#ffffff',
@@ -273,12 +282,12 @@ export function GardenEnvelope({
       back: new MeshStandardMaterial({ map: face.liner, roughness: 0.75, side: BackSide, transparent: true }),
       inner: new MeshBasicMaterial({ color: mixHex(colors.paper, colors.blush, 0.35), toneMapped: false, transparent: true }),
       glow: new MeshBasicMaterial({ map: glow, color: '#ffffff', blending: AdditiveBlending, transparent: true, depthWrite: false, toneMapped: false, opacity: 0 }),
-      shards: [0, 1, 2, 3].map((i) => shardMaterial(i, sealMaps, colors.seal)),
+      shards: [0, 1, 2, 3].map((i) => shardMaterial(i, sealMaps, colors.seal, gold)),
       innerBase: new Color(mixHex(colors.paper, colors.blush, 0.35)),
       innerHot: new Color('#FFF3DF'),
       textures: [face.map, face.normalMap, face.liner, sealMaps.map, sealMaps.normal, glow],
     };
-  }, [w, h, monogram, fontVar, colors.paper, colors.blush, colors.gold, colors.seal]);
+  }, [w, h, monogram, fontVar, relief, colors.paper, colors.blush, colors.seal, colors.sealRelief, colors.sealFinish]);
 
   useEffect(
     () => () => {

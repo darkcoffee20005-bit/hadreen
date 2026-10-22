@@ -18,19 +18,36 @@ float sgNoise(vec2 p) {
   f = f * f * (3.0 - 2.0 * f);
   return mix(mix(sgHash(i), sgHash(i + vec2(1.0, 0.0)), f.x), mix(sgHash(i + vec2(0.0, 1.0)), sgHash(i + vec2(1.0, 1.0)), f.x), f.y);
 }
+float sgFbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 4; i++) { v += a * sgNoise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
+  return v;
+}
 vec3 skyColor(vec3 dir) {
   float h = dir.y;
-  vec3 col = mix(uHorizon, uMid, smoothstep(0.0, 0.22, h));
-  col = mix(col, uZenith, smoothstep(0.22, 0.8, h));
+  // Sunset: gold at the horizon, a rose band, lilac above, a soft blue overhead.
+  vec3 col = mix(uHorizon, uMid, smoothstep(0.0, 0.16, h));
+  col = mix(col, uZenith, smoothstep(0.12, 0.75, h));
   float s = max(dot(dir, uSunDir), 0.0);
-  // Thin wisps low in the sky, lit gold toward the sun.
-  vec2 q = vec2(atan(dir.x, -dir.z) * 4.0, h * 30.0);
-  float wisp = sgNoise(q + vec2(0.0, 3.0)) * sgNoise(q * vec2(2.7, 0.45) + 1.7);
-  wisp = smoothstep(0.22, 0.62, wisp) * smoothstep(0.03, 0.1, h) * (1.0 - smoothstep(0.22, 0.42, h));
-  col = mix(col, mix(uMid * 1.06, uSunColor * 1.2, pow(s, 3.0)), wisp * 0.45);
-  col += uSunColor * (pow(s, 5.0) * 0.28 + pow(s, 40.0) * 0.5);
-  col += uSunColor * smoothstep(0.9991, 0.99965, s) * 2.6;
-  if (h < 0.0) col = mix(col, uHorizon * 0.92, smoothstep(0.0, 0.25, -h));
+  // The horizon glows warmer toward the sun.
+  col = mix(col, uSunColor, pow(s, 6.0) * (1.0 - smoothstep(0.0, 0.3, h)) * 0.55);
+  // Soft cumulus banks low in the sky: flattened fbm, lit rose-gold underneath, gilded toward the sun.
+  vec2 q = vec2(atan(dir.x, -dir.z) * 2.6, h * 9.0);
+  float c = sgFbm(q * vec2(1.0, 2.2) + vec2(0.0, 1.3));
+  float band = smoothstep(0.035, 0.08, h) * (1.0 - smoothstep(0.24, 0.42, h));
+  float cloud = smoothstep(0.5, 0.72, c) * band;
+  float lit = smoothstep(0.45, 0.85, sgFbm(q * vec2(1.0, 2.2) + vec2(0.15, 1.05)) - c + 0.6);
+  vec3 cloudCol = mix(uMid * vec3(1.02, 0.93, 0.95), mix(uHorizon, uSunColor, 0.5) * 1.12, lit * 0.6 + pow(s, 4.0) * 0.5);
+  col = mix(col, cloudCol, cloud * 0.8);
+  // Thin wisps higher up.
+  vec2 w = vec2(atan(dir.x, -dir.z) * 5.0, h * 26.0);
+  float wisp = smoothstep(0.55, 0.8, sgNoise(w) * sgNoise(w * vec2(2.4, 0.4) + 3.1) * 1.6) * smoothstep(0.2, 0.3, h) * (1.0 - smoothstep(0.45, 0.6, h));
+  col = mix(col, uMid * 1.05, wisp * 0.35);
+  // The sun: a soft disc with a wide warm halo.
+  col += uSunColor * (pow(s, 12.0) * 0.32 + pow(s, 160.0) * 0.7);
+  col = mix(col, vec3(1.0, 0.96, 0.86) * 1.5, smoothstep(0.99955, 0.99985, s) * (1.0 - cloud * 0.5));
+  if (h < 0.0) col = mix(col, uHorizon * 0.95, smoothstep(0.0, 0.2, -h));
   return col;
 }
 `;
@@ -111,6 +128,9 @@ varying vec3 vWorld;
 varying vec4 vProj;
 void main() {
   vec3 N = waterNormal(vWorld.xz);
+  // Far out the ripples are finer than a pixel: let the lake settle into a mirror.
+  float near = 1.0 - smoothstep(30.0, 110.0, length(vWorld - cameraPosition));
+  N = normalize(vec3(N.x * near, 1.0, N.z * near));
   vec3 V = normalize(vWorld - cameraPosition);
   vec3 R = reflect(V, N);
   R.y = abs(R.y);

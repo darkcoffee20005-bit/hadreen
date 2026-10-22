@@ -48,6 +48,8 @@ export interface PaletteVariant {
   nameAr: string;
   nameEn: string;
   tokens: Partial<DomPalette>;
+  /** Scene colours this variant changes (merged over the template's). */
+  scene?: Record<string, string>;
 }
 
 export type GateGesture = 'tap' | 'hold' | 'scratch';

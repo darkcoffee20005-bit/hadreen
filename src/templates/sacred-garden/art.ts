@@ -293,3 +293,115 @@ export function leafNormal(): CanvasTexture {
   t.wrapS = t.wrapT = RepeatWrapping;
   return t;
 }
+
+/**
+ * The seal's height map: a raised rim, a laurel wreath circling the monogram (leaves in pairs
+ * along a stem, tied with a bow at the bottom), a fine inner ring and the initials.
+ */
+export function sealHeight(monogram: string, family: string, size = 512): HTMLCanvasElement {
+  const [c, ctx] = canvas(size, size);
+  const m = size / 2;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, size, size);
+  ctx.filter = 'blur(2px)';
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle = '#fff';
+  ctx.lineWidth = size * 0.03;
+  ctx.beginPath();
+  ctx.arc(m, m, size * 0.405, 0, Math.PI * 2);
+  ctx.stroke();
+  // The wreath: two branches from the bottom, meeting at the top.
+  const R = size * 0.32;
+  ctx.lineWidth = size * 0.008;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(m, m, R, Math.PI / 2 + side * 0.18, Math.PI / 2 + side * (Math.PI - 0.22), side < 0);
+    ctx.stroke();
+    for (let i = 0; i < 13; i++) {
+      const a = Math.PI / 2 + side * (0.3 + i * 0.205);
+      const px = m + Math.cos(a) * R;
+      const py = m + Math.sin(a) * R;
+      const tang = a + (side * Math.PI) / 2;
+      const len = size * (0.042 - i * 0.0012);
+      for (const out of [-1, 1]) {
+        const la = tang + side * out * 0.55 + Math.PI;
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.translate(px + Math.cos(la) * len * 0.55, py + Math.sin(la) * len * 0.55);
+        ctx.rotate(la);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, len * 0.6, len * 0.24, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      if (i % 4 === 2) {
+        ctx.beginPath();
+        ctx.arc(px, py, size * 0.009, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  // A small bow where the branches cross.
+  ctx.beginPath();
+  ctx.ellipse(m - size * 0.03, m + R + size * 0.005, size * 0.03, size * 0.014, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(m + size * 0.03, m + R + size * 0.005, size * 0.03, size * 0.014, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = size * 0.006;
+  ctx.beginPath();
+  ctx.arc(m, m, size * 0.255, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.filter = 'blur(1.6px)';
+  ctx.font = `700 ${Math.round(size * 0.15)}px ${family}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.direction = 'rtl';
+  ctx.fillText(monogram, m, m + size * 0.015, size * 0.4);
+  return c;
+}
+
+/** Polished cream marble tiles with soft grey-rose veins (colour map; tile = 1 uv unit / 2). */
+export function marbleMap(base: string, size = 512): CanvasTexture {
+  const [c, ctx] = canvas(size, size);
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, size, size);
+  const rand = rng(29);
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 26; i++) {
+    let x = rand() * size;
+    let y = rand() * size;
+    let a = rand() * Math.PI;
+    ctx.strokeStyle = `rgba(${150 + rand() * 30},${130 + rand() * 20},${125 + rand() * 20},${0.08 + rand() * 0.12})`;
+    ctx.lineWidth = 0.6 + rand() * 1.8;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let k = 0; k < 18; k++) {
+      a += (rand() - 0.5) * 0.7;
+      x += Math.cos(a) * 14;
+      y += Math.sin(a) * 14;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  // Soft clouds in the stone.
+  for (let i = 0; i < 40; i++) {
+    const g = ctx.createRadialGradient(rand() * size, rand() * size, 0, rand() * size, rand() * size, 30 + rand() * 60);
+    g.addColorStop(0, `rgba(255,255,255,${0.05 + rand() * 0.06})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+  }
+  // Tile joints: 2 × 2 tiles per texture.
+  ctx.strokeStyle = 'rgba(120,100,90,0.28)';
+  ctx.lineWidth = 2;
+  for (const p of [0, size / 2]) {
+    ctx.beginPath();
+    ctx.moveTo(p + 1, 0);
+    ctx.lineTo(p + 1, size);
+    ctx.moveTo(0, p + 1);
+    ctx.lineTo(size, p + 1);
+    ctx.stroke();
+  }
+  const t = tex(c, true);
+  t.wrapS = t.wrapT = RepeatWrapping;
+  return t;
+}

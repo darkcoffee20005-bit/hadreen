@@ -216,7 +216,9 @@ export function InviteShell({ view, lab = false, children }: { view: InviteView;
       else s.open();
     } else if (phase === 'opening') {
       if (capture === 'mid') {
-        if (s.intro) s.intro.seek(s.intro.duration * 0.55);
+        // ?at=<seconds> holds another moment of the opening (QA); the default is just past half way.
+        const at = Number(new URLSearchParams(window.location.search).get('at'));
+        if (s.intro) s.intro.seek(at > 0 ? Math.min(at, s.intro.duration) : s.intro.duration * 0.55);
         ready(path === '2d' ? openingMs2d / 2 : 900);
       } else s.skip();
     } else if (phase === 'content' && capture === 'content') {
