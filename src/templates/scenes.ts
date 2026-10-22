@@ -16,4 +16,5 @@ export const SCENE_LOADERS: Record<TemplateId, () => Promise<SceneModule>> = {
   'eternal-romance': () => import('./eternal-romance/Scene'),
   'destination-love': () => import('./destination-love/Scene'),
   'old-money': () => import('./old-money/Scene'),
+  'white-house-hall': () => import('./white-house-hall/Scene'),
 };

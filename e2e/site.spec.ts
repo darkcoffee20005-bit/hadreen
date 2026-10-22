@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { TEMPLATES } from '../src/templates';
+import { PUBLIC_TEMPLATES } from '../src/templates';
 
 test.describe('marketing site', () => {
   test('hero, picker, gallery filters, price and FAQ', async ({ page }) => {
@@ -13,11 +13,13 @@ test.describe('marketing site', () => {
 
     // Gallery filters by style.
     const gallery = page.locator('#designs');
-    await expect(gallery.locator('li h3')).toHaveCount(TEMPLATES.length);
+    await expect(gallery.locator('li h3')).toHaveCount(PUBLIC_TEMPLATES.length);
     await gallery.getByRole('button', { name: 'سفر' }).click();
     await expect(gallery.locator('li h3')).toHaveText(['حب بلا حدود']);
     await gallery.getByRole('button', { name: 'الكل' }).click();
-    await expect(gallery.locator('li h3')).toHaveCount(TEMPLATES.length);
+    await expect(gallery.locator('li h3')).toHaveCount(PUBLIC_TEMPLATES.length);
+    // Venue-exclusive designs are offered through their venue, never on the public site.
+    await expect(page.getByText('البيت الأبيض', { exact: true })).toHaveCount(0);
 
     await expect(page.locator('#price')).toContainText('٤٩ ألف دينار');
     const faq = page.locator('#faq');
@@ -40,6 +42,7 @@ test.describe('marketing site', () => {
     expect(robots).toContain('Disallow: /d/');
     const sitemap = await (await request.get('/sitemap.xml')).text();
     expect(sitemap).toContain('/i/demo-royal-gold');
+    expect(sitemap).not.toContain('/i/demo-white-house-hall');
     expect(sitemap).not.toContain('/d/');
   });
 });

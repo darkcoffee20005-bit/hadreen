@@ -6,6 +6,7 @@ import { eternalRomance } from './eternal-romance/meta';
 import { oldMoney } from './old-money/meta';
 import { royalGold } from './royal-gold/meta';
 import { sacredGarden } from './sacred-garden/meta';
+import { whiteHouseHall } from './white-house-hall/meta';
 
 /** Metadata only. 3D scenes are dynamic imports (Phase 2+), so this stays light. */
 export const TEMPLATES: readonly TemplateMeta[] = [
@@ -16,7 +17,11 @@ export const TEMPLATES: readonly TemplateMeta[] = [
   eternalRomance,
   destinationLove,
   oldMoney,
+  whiteHouseHall,
 ];
+
+/** The designs the public site shows: everything except venue-exclusive ones. */
+export const PUBLIC_TEMPLATES: readonly TemplateMeta[] = TEMPLATES.filter((t) => !t.exclusive);
 
 export function isTemplateId(value: string): value is TemplateId {
   return (TEMPLATE_IDS as readonly string[]).includes(value);

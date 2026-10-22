@@ -18,4 +18,5 @@ export const FALLBACK_LOADERS: Record<TemplateId, () => Promise<FallbackModule>>
   'eternal-romance': () => import('./eternal-romance/Fallback2D'),
   'destination-love': () => import('./destination-love/Fallback2D'),
   'old-money': () => import('./old-money/Fallback2D'),
+  'white-house-hall': () => import('./white-house-hall/Fallback2D'),
 };

@@ -1,0 +1,217 @@
+/*
+ * Content-page styling for white-house-hall. Everything here is scoped under
+ * [data-template='white-house-hall'] (the content root carries the attribute).
+ *
+ * Off-white paper and black ink, nothing else but a hairline: square-cut sheets with a fine double
+ * rule (like the card), headings in the serif with a small pediment as the divider, a black
+ * countdown band, the programme on a thin black line, and the hall's façade as the venue's picture.
+ * Over the stage (the white hall, inside the shell: [data-path]) the hero reads in black.
+ */
+[data-template='white-house-hall'] {
+  --whh-pediment: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 24'%3E%3Cg fill='none' stroke='%23151515' stroke-linecap='round'%3E%3Cpath d='M2 16H50M110 16H158' stroke-width='.8'/%3E%3Cpath d='M58 14L80 4L102 14Z' stroke-width='1'/%3E%3Cpath d='M56 14H104M57 21H103' stroke-width='.9'/%3E%3Cpath d='M63 15V21M71.5 15V21M80 15V21M88.5 15V21M97 15V21' stroke-width='.8'/%3E%3C/g%3E%3C/svg%3E");
+  --whh-capital: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='%23151515' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M6 7H34'/%3E%3Cpath d='M9 7C9 12 12 13 14 13M31 7C31 12 28 13 26 13'/%3E%3Ccircle cx='9.5' cy='11' r='2.4'/%3E%3Ccircle cx='30.5' cy='11' r='2.4'/%3E%3Cpath d='M14 13H26M15 16H25'/%3E%3Cpath d='M15 16V36M25 16V36M18.4 18V34M21.6 18V34'/%3E%3C/g%3E%3C/svg%3E");
+  --whh-paper: color-mix(in srgb, var(--c-surface) 85%, var(--c-bg));
+  --whh-rule: color-mix(in srgb, var(--c-ink) 55%, transparent);
+}
+
+/* ── Hero over the white hall ─────────────────────────────────────────────── */
+[data-path] [data-template='white-house-hall'] > header {
+  color: var(--c-ink);
+}
+[data-path] [data-template='white-house-hall'] > header > div[aria-hidden='true']:first-child {
+  background: radial-gradient(
+    68% 52% at 50% 50%,
+    color-mix(in srgb, var(--c-bg) 88%, transparent) 0%,
+    color-mix(in srgb, var(--c-bg) 62%, transparent) 52%,
+    transparent 100%
+  );
+}
+[data-path] [data-template='white-house-hall'] > header p,
+[data-path] [data-template='white-house-hall'] > header a {
+  color: var(--c-ink);
+  text-shadow: 0 0 3px var(--c-bg), 0 0 14px color-mix(in srgb, var(--c-bg) 90%, transparent);
+}
+[data-path] [data-template='white-house-hall'] > header > p:first-of-type {
+  letter-spacing: 0.04em;
+  color: var(--c-ink-soft);
+}
+[data-template='white-house-hall'] > header svg {
+  color: var(--c-ink);
+}
+[data-path] [data-template='white-house-hall'] #invite-hero {
+  color: var(--c-ink);
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.6), 0 0 26px color-mix(in srgb, var(--c-bg) 95%, transparent);
+}
+[data-path] [data-template='white-house-hall'] #invite-hero > span:nth-child(2) {
+  color: var(--c-ink-soft);
+}
+[data-path] [data-template='white-house-hall'] > header a {
+  border-color: var(--c-ink);
+  background: color-mix(in srgb, var(--c-bg) 70%, transparent);
+  font-family: var(--f-serif);
+  letter-spacing: 0.02em;
+}
+
+/* Swap the gold diamond ornament for black. */
+[data-template='white-house-hall'] svg.text-inv-gold {
+  color: var(--c-ink);
+}
+
+/* ── The hall plaque after the hero ───────────────────────────────────────── */
+[data-template='white-house-hall'] .whh-plaque figure {
+  padding: 2.25rem 1.5rem 2rem;
+  background: var(--whh-paper);
+  box-shadow:
+    0 30px 60px -32px rgb(0 0 0 / 0.35),
+    inset 0 0 0 7px var(--whh-paper),
+    inset 0 0 0 8px var(--whh-rule);
+}
+
+/* ── Sheets: square-cut paper with the card's double rule ─────────────────── */
+[data-template='white-house-hall'] main > section[data-reveal] > div.mx-auto:not(.bg-inv-band) {
+  border-radius: 2px;
+  background: var(--whh-paper);
+  --tw-ring-color: transparent;
+  box-shadow:
+    0 34px 70px -34px rgb(0 0 0 / 0.38),
+    inset 0 0 0 8px var(--whh-paper),
+    inset 0 0 0 9px var(--whh-rule),
+    inset 0 0 0 12px var(--whh-paper),
+    inset 0 0 0 12.5px color-mix(in srgb, var(--c-ink) 30%, transparent);
+}
+[data-template='white-house-hall'] main h2 {
+  font-family: var(--f-serif);
+  color: var(--c-ink);
+  letter-spacing: 0.02em;
+}
+/* Under every heading, a small pediment instead of the diamond. */
+[data-template='white-house-hall'] main section header > svg {
+  width: 10rem;
+  height: 1.5rem;
+  color: transparent;
+  background: var(--whh-pediment) no-repeat center / contain;
+}
+[data-template='white-house-hall'] main section header > svg * {
+  display: none;
+}
+
+/* Verse and intro read like the card: centred serif, generous leading. */
+[data-template='white-house-hall'] main > section:first-of-type p {
+  color: var(--c-ink);
+}
+
+/* ── Countdown: a black band, off-white numerals ──────────────────────────── */
+[data-template='white-house-hall'] section[aria-labelledby='countdown-title'] > div {
+  border-radius: 2px;
+  border-color: transparent;
+  background: var(--c-band);
+  box-shadow:
+    0 34px 70px -30px rgb(0 0 0 / 0.5),
+    inset 0 0 0 8px var(--c-band),
+    inset 0 0 0 9px color-mix(in srgb, var(--c-on-band) 35%, transparent);
+}
+[data-template='white-house-hall'] section[aria-labelledby='countdown-title'] h2 {
+  color: var(--c-on-band);
+  letter-spacing: 0.06em;
+}
+[data-template='white-house-hall'] .flip-half {
+  background: #1b1b1b;
+  color: var(--c-on-band);
+  font-family: var(--f-serif);
+  font-weight: 400;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+[data-template='white-house-hall'] .flip-bottom {
+  background: #171717;
+}
+
+/* ── Programme: a thin black line, a column capital at every moment ──────── */
+[data-template='white-house-hall'] #programme [data-draw-line] {
+  background: var(--c-ink);
+}
+[data-template='white-house-hall'] #programme ol > li > span[aria-hidden='true'] {
+  inset-inline-start: -2.68rem;
+  top: -0.05rem;
+  width: 1.85rem;
+  height: 1.85rem;
+  rotate: none;
+  border: 0;
+  background: var(--whh-paper) var(--whh-capital) no-repeat center / 1.5rem;
+}
+[data-template='white-house-hall'] #programme li > p:first-child {
+  color: var(--c-ink-soft);
+  letter-spacing: 0.04em;
+}
+
+/* ── Venue: the hall's façade is the picture ──────────────────────────────── */
+[data-template='white-house-hall'] #venue .gold-frame {
+  border-radius: 2px;
+  border-color: var(--c-ink);
+  background: var(--c-surface);
+  padding-top: 1.75rem;
+}
+/* The frame's inner rules in ink, not gold. */
+[data-template='white-house-hall'] .gold-frame::before,
+[data-template='white-house-hall'] .gold-frame::after {
+  border-color: var(--whh-rule);
+}
+[data-template='white-house-hall'] #venue .gold-frame > div::before {
+  content: '';
+  display: block;
+  width: min(100%, 20rem);
+  margin: 0 auto 1.5rem;
+  aspect-ratio: 11.3 / 8.95;
+  background: var(--whh-facade, none) no-repeat center / contain;
+}
+[data-template='white-house-hall'] #venue .gold-frame p:first-child {
+  font-size: 1.85rem;
+  letter-spacing: 0.02em;
+}
+[data-template='white-house-hall'] #venue .gold-frame p.text-inv-gold-ink {
+  color: var(--c-ink-soft);
+}
+
+/* Pills: black and off-white. */
+[data-template='white-house-hall'] #venue a.rounded-full:not(.bg-inv-accent),
+[data-template='white-house-hall'] #venue button.rounded-full {
+  border-color: var(--c-ink);
+}
+
+/* Dress code swatches: a hairline ring like a button. */
+[data-template='white-house-hall'] #dress ul > li {
+  box-shadow: 0 0 0 3px var(--whh-paper), 0 0 0 4px var(--whh-rule);
+}
+
+/* ── RSVP in black and off-white ──────────────────────────────────────────── */
+[data-template='white-house-hall'] #rsvp .gold-frame {
+  border-radius: 2px;
+  border-color: var(--c-ink);
+  background: var(--c-surface);
+}
+[data-template='white-house-hall'] #rsvp legend {
+  font-family: var(--f-serif);
+  letter-spacing: 0.02em;
+}
+
+/* ── Closing line and footer on the hall ──────────────────────────────────── */
+[data-path] [data-template='white-house-hall'] main > section:last-child p {
+  color: var(--c-ink);
+  text-shadow: 0 0 4px var(--c-bg), 0 0 24px color-mix(in srgb, var(--c-bg) 95%, transparent);
+}
+[data-path] [data-template='white-house-hall'] > footer {
+  color: var(--c-ink);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--c-bg) 95%, transparent);
+}
+[data-path] [data-template='white-house-hall'] > footer a {
+  color: var(--c-ink);
+}
+/* A discreet line for the hall at the very bottom. */
+[data-template='white-house-hall'] > footer::after {
+  content: var(--whh-hall, 'قاعة البيت الأبيض · الموصل');
+  display: block;
+  margin-top: 0.85rem;
+  font-family: var(--f-serif);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}

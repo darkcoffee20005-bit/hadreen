@@ -1,11 +1,11 @@
 {
-  "measuredAt": "2026-10-21T23:09:35.551Z",
+  "measuredAt": "2026-10-22T23:01:44.986Z",
   "base": "http://localhost:3300",
   "rows": [
     {
       "template": "sacred-garden",
       "budgetKB": 1200,
-      "kb3d": 996,
+      "kb3d": 995,
       "kb2d": 524,
       "requests3d": 48,
       "gate": {
@@ -27,7 +27,7 @@
       "template": "blossom-oud",
       "budgetKB": 1400,
       "kb3d": 992,
-      "kb2d": 523,
+      "kb2d": 522,
       "requests3d": 42,
       "gate": {
         "calls": 24,
@@ -62,13 +62,13 @@
         "triangles": 284543,
         "geometries": 53,
         "textures": 36,
-        "programs": 53
+        "programs": 52
       }
     },
     {
       "template": "royal-gold",
       "budgetKB": 1400,
-      "kb3d": 992,
+      "kb3d": 991,
       "kb2d": 524,
       "requests3d": 42,
       "gate": {
@@ -89,8 +89,8 @@
     {
       "template": "eternal-romance",
       "budgetKB": 1300,
-      "kb3d": 987,
-      "kb2d": 523,
+      "kb3d": 986,
+      "kb2d": 522,
       "requests3d": 45,
       "gate": {
         "calls": 46,
@@ -111,8 +111,8 @@
       "template": "destination-love",
       "budgetKB": 1300,
       "kb3d": 1016,
-      "kb2d": 523,
-      "requests3d": 43,
+      "kb2d": 522,
+      "requests3d": 44,
       "gate": {
         "calls": 30,
         "triangles": 26899,
@@ -121,32 +121,32 @@
         "programs": 36
       },
       "content": {
-        "calls": 30,
-        "triangles": 26899,
+        "calls": 49,
+        "triangles": 27127,
         "geometries": 32,
         "textures": 28,
         "programs": 36
       }
     },
     {
-      "template": "old-money",
+      "template": "white-house-hall",
       "budgetKB": 1300,
-      "kb3d": 985,
-      "kb2d": 525,
-      "requests3d": 46,
+      "kb3d": 993,
+      "kb2d": 524,
+      "requests3d": 44,
       "gate": {
-        "calls": 30,
-        "triangles": 48365,
-        "geometries": 25,
+        "calls": 22,
+        "triangles": 1312,
+        "geometries": 26,
         "textures": 29,
-        "programs": 43
+        "programs": 37
       },
       "content": {
-        "calls": 20,
-        "triangles": 8239,
-        "geometries": 24,
-        "textures": 26,
-        "programs": 36
+        "calls": 40,
+        "triangles": 57374,
+        "geometries": 46,
+        "textures": 37,
+        "programs": 46
       }
     }
   ]

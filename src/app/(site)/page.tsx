@@ -14,7 +14,7 @@ import { Price } from '@/site/Price';
 import { SiteHeader } from '@/site/SiteHeader';
 import { SiteMotion } from '@/site/SiteMotion';
 import { Ticker } from '@/site/Ticker';
-import { TEMPLATES } from '@/templates';
+import { PUBLIC_TEMPLATES } from '@/templates';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   // The demo weddings feed the hero's live thumbnails (example names and dates).
   const demos = await Promise.all(
-    TEMPLATES.map(async (t) => {
+    PUBLIC_TEMPLATES.map(async (t) => {
       const w = await getPublicWedding(`demo-${t.id}`);
       return w ? buildSceneView(buildInviteView(w, null)) : null;
     }),

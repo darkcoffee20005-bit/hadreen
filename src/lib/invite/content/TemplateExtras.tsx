@@ -16,6 +16,7 @@ const EXTRAS: Record<TemplateId, ComponentType<ExtrasProps>> = {
   'eternal-romance': dynamic(() => import('@/templates/eternal-romance/Extras'), { ssr: false }),
   'destination-love': dynamic(() => import('@/templates/destination-love/Extras'), { ssr: false }),
   'old-money': dynamic(() => import('@/templates/old-money/Extras'), { ssr: false }),
+  'white-house-hall': dynamic(() => import('@/templates/white-house-hall/Extras'), { ssr: false }),
 };
 
 export function TemplateExtras({ view }: ExtrasProps) {

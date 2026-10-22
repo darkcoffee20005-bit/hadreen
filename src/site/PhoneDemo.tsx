@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { TEMPLATES } from '@/templates';
+import { PUBLIC_TEMPLATES } from '@/templates';
 import { copy } from './copy';
 import { PreviewMedia } from './PreviewMedia';
 import { SectionTitle } from './ui';
@@ -20,7 +20,7 @@ export function PhoneDemo() {
   const section = useRef<HTMLElement>(null);
   const phone = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.72);
-  const template = TEMPLATES[index]!;
+  const template = PUBLIC_TEMPLATES[index]!;
 
   useEffect(() => {
     const desktop = window.matchMedia('(min-width: 1024px) and (pointer: fine)').matches;
@@ -67,7 +67,7 @@ export function PhoneDemo() {
         <div>
           <SectionTitle id="try-title" title={copy.phone.title} lead={copy.phone.lead} />
           <ul className="mx-auto mt-8 flex max-w-xl flex-wrap justify-center gap-2" aria-label={copy.hero.pick}>
-            {TEMPLATES.map((t, i) => (
+            {PUBLIC_TEMPLATES.map((t, i) => (
               <li key={t.id}>
                 <button
                   type="button"

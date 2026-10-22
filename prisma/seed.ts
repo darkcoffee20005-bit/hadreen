@@ -33,6 +33,7 @@ interface Demo {
   dress: { label: string; swatches: string[]; ladies: string; gentlemen: string };
   notes: string;
   originCity?: string;
+  mapsUrl?: string;
 }
 
 const DEMOS: Record<TemplateId, Demo> = {
@@ -141,6 +142,23 @@ const DEMOS: Record<TemplateId, Demo> = {
     dress: { label: 'رسمي أنيق', swatches: ['#6E7B55', '#E9E3D3', '#2E3325', '#B89A5E', '#9A9A96'], ladies: 'فساتين سهرة بألوان هادئة', gentlemen: 'بدلة رسمية داكنة' },
     notes: 'نرجو تأكيد الحضور قبل الموعد المحدد حتى نرتب لكم أماكنكم.',
   },
+  'white-house-hall': {
+    groom: 'عمر',
+    bride: 'رهف',
+    venue: 'قاعة البيت الأبيض',
+    area: 'الموصل · الغابات',
+    verse: NIKKAH_VERSE,
+    intro: 'بقلوب ملؤها الفرح، نتشرّف بدعوتكم لمشاركتنا ليلة العمر في قاعة البيت الأبيض.',
+    schedule: [
+      { time: '19:00', title: 'استقبال الضيوف', subtitle: '' },
+      { time: '20:00', title: 'دخول العروسين', subtitle: '' },
+      { time: '21:00', title: 'العشاء', subtitle: '' },
+      { time: '22:30', title: 'قطع الكيك', subtitle: '' },
+    ],
+    dress: { label: 'أبيض وأسود', swatches: ['#F4F1EA', '#151515', '#B5A27A'], ladies: 'فساتين سهرة بالأسود أو بألوان هادئة', gentlemen: 'بدلة سوداء' },
+    notes: 'نتشرّف بحضوركم من بداية الحفل.',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=%D9%82%D8%A7%D8%B9%D8%A9%20%D8%A7%D9%84%D8%A8%D9%8A%D8%AA%20%D8%A7%D9%84%D8%A3%D8%A8%D9%8A%D8%B6%20%D8%A7%D9%84%D9%85%D9%88%D8%B5%D9%84',
+  },
 };
 
 const GUESTS = [
@@ -171,16 +189,26 @@ const ANSWERS: [boolean, number, string][] = [
 const OPENED_ONLY = 2; // guests after the answers who opened but haven't replied
 
 async function main() {
-  // `--if-missing` (used by the deploy build): seed only a fresh database, never reset demos.
-  if (process.argv.includes('--if-missing') && (await prisma.wedding.count({ where: { isDemo: true } })) > 0) {
-    console.log('Demo weddings already exist; nothing to do.');
-    return;
+  // `--if-missing` (used by the deploy build): only add demos for templates that have none yet
+  // (a fresh database, or a newly added template); existing demos are never reset.
+  const ifMissing = process.argv.includes('--if-missing');
+  let templates: readonly (typeof TEMPLATES)[number][] = TEMPLATES;
+  if (ifMissing) {
+    const existing = new Set(
+      (await prisma.wedding.findMany({ where: { slug: { in: TEMPLATES.map((t) => `demo-${t.id}`) } }, select: { slug: true } })).map((w) => w.slug),
+    );
+    templates = TEMPLATES.filter((t) => !existing.has(`demo-${t.id}`));
+    if (templates.length === 0) {
+      console.log('Every template has its demo wedding; nothing to do.');
+      return;
+    }
+  } else {
+    await prisma.wedding.deleteMany({ where: { isDemo: true } });
   }
-  await prisma.wedding.deleteMany({ where: { isDemo: true } });
   const { date, deadline } = demoSchedule(new Date());
   const lines: string[] = [];
 
-  for (const template of TEMPLATES) {
+  for (const template of templates) {
     const demo = DEMOS[template.id];
     const wedding = await prisma.wedding.create({
       data: {
@@ -195,6 +223,7 @@ async function main() {
         intro: demo.intro,
         venueName: demo.venue,
         venueArea: demo.area,
+        mapsUrl: demo.mapsUrl ?? '',
         dressCode: demo.dress as Prisma.InputJsonValue,
         notes: demo.notes,
         rsvpDeadline: deadline,
@@ -225,7 +254,7 @@ async function main() {
     lines.push(`  ${template.nameAr.padEnd(18)} /i/${wedding.slug}   dashboard: /d/${wedding.slug}?k=${wedding.coupleSecret}  code: ${wedding.couplePin}`);
   }
 
-  console.log(`Seeded ${TEMPLATES.length} demo weddings:\n${lines.join('\n')}`);
+  console.log(`Seeded ${templates.length} demo weddings:\n${lines.join('\n')}`);
 }
 
 main()
